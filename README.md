@@ -48,6 +48,7 @@ wavelog-flagmap --source lotw --callsign N0CALL -o ./out
 
 LoTW returns every QSO you uploaded, so "confirmed" means confirmed in LoTW (paper QSLs are not
 known to LoTW). If your account has several callsigns, `--lotw-owncall N0CALL` keeps one.
+LoTW is slow to answer (about 3 minutes for 5,000 QSOs); that is normal.
 
 From your Wavelog instance:
 

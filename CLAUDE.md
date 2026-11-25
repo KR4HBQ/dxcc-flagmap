@@ -7,7 +7,8 @@ Owner: Neal (KR4HBQ). Intended audience: any Wavelog user, so nothing may be har
 ## Decisions already made
 - MIT license. Python >= 3.10 (3.9 is EOL and gone from GitHub runners), Pillow for rendering, no heavy deps.
 - Sources: Wavelog API (default, no DB access), LoTW (`--source lotw`, LOTW_USERNAME/LOTW_PASSWORD env), ADIF file
-  or URL (`--adif`, any logger). Auto order: adif, wavelog, lotw. Every request sends net.USER_AGENT.
+  or URL (`--adif`, any logger). LoTW VERIFIED live 2026-11-25: 125 worked like Wavelog, 96 LoTW-confirmed vs
+  Wavelog's 95 (one confirmation Wavelog had not synced yet); the report takes ~3 min for 5k QSOs. Auto order: adif, wavelog, lotw. Every request sends net.USER_AGENT.
   Credentials that sit in a URL (LoTW password, Wavelog station_info key) must never reach error messages.
 - Not supported: Cloudlog (no export API), QRZ Logbook (FETCH needs a paid subscription; needs a non-generic
   User-Agent). Club Log has a REST `POST /api/v1/logs/{call}/adif-export` (Bearer token) - candidate.

@@ -16,7 +16,7 @@ import requests
 from .net import HEADERS
 
 ENDPOINT = "https://lotw.arrl.org/lotwuser/lotwreport.adi"
-TIMEOUT = 300  # LoTW builds the whole report before answering; large logs take a while
+TIMEOUT = 900  # LoTW builds the whole report before answering: ~3 min for 5k QSOs
 
 
 class LotwError(RuntimeError):
