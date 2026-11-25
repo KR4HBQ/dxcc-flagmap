@@ -365,8 +365,9 @@ def test_qrz_fetch_pages_by_logid_and_normalizes(monkeypatch):
 
     def fake_post(url, data, headers, timeout):
         calls.append(data["OPTION"])
-        after = int(data["OPTION"].split("AFTERLOGID:")[1])
-        page = [r for i, r in enumerate(recs) if 100 + i >= after][:2]
+        opts = dict(o.split(":") for o in data["OPTION"].split(","))
+        after, size = int(opts["AFTERLOGID"]), int(opts["MAX"])
+        page = [r for i, r in enumerate(recs) if 100 + i >= after][:size]
         if not page:
             return _Http("COUNT=0&RESULT=FAIL")  # what QRZ really sends past the end
         return _Http(f"RESULT=OK&COUNT=5&ADIF={quote(''.join(page))}")
