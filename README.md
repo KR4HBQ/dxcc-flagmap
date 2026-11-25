@@ -12,9 +12,11 @@ where JavaScript and iframes won't work: the output is plain PNG files.
 
 ## Features
 
-- Reads your log from the **Wavelog API** (no database access needed) or from any **ADIF file**.
-- Counts QSOs **or confirmed QSOs** (LoTW / QSL / eQSL) per DXCC entity.
-- Real DXCC entities, not just countries: Hawaii, Scotland, Sicily and so on, each with its own flag.
+- Reads your log from the **Wavelog API** (no database access needed) or from an **ADIF file exported by any
+  logger** (Log4OM, N1MM+, HRD, DXKeeper, Cloudlog, QRZ Logbook, Club Log, LoTW...).
+- Counts QSOs **or confirmed QSOs** (LoTW / QSL / eQSL / QRZ / Club Log, your choice) per DXCC entity.
+- Real DXCC entities, not just countries: Alaska, Hawaii, Scotland, the Canary Islands and so on.
+  QSOs without a DXCC field are placed from the callsign (AD1C cty.dat prefixes and exception list).
 - Fully offline rendering. Flags and map data are bundled, with no CDN calls.
 - Writes `dxcc-grid.png`, `dxcc-map.png` and `dxcc-stats.json`, replacing files atomically so a web server never serves a half-written image.
 - Light and dark themes.
@@ -119,6 +121,11 @@ See [`examples/config.example.yaml`](examples/config.example.yaml). Common optio
 | `map.width`, `map.flag_w`, `map.flag_h` | map image size and flag size (defaults 1600, 36x27: sized to look right when a QRZ bio shows the map at ~800 px) |
 
 ## Limitations
+
+- QSOs are placed by their ADIF `DXCC` field when present (Wavelog and most loggers fill it in).
+  Without it, the entity comes from the callsign. That matches the logger's own assignment for about
+  99.9% of QSOs; the exceptions are mostly US hams who moved but kept a KL7, KH6 or KP4 call.
+- Cloudlog has no full-log export API, so Cloudlog users export an ADIF file instead.
 
 - Map flag positions are the AD1C cty.dat reference points for each entity (one point per entity,
   so large countries show a single flag). Flags in crowded regions (Europe, Caribbean) are spread

@@ -55,11 +55,14 @@ def count_entities(qsos: Iterable[dict[str, str]], confirmed_by: Iterable[str] =
     skipped = 0
     for rec in qsos:
         entity = None
-        raw = rec.get("dxcc", "")
-        if raw.isdigit() and int(raw) in ents:
-            entity = ents[int(raw)]
-        elif rec.get("country"):
-            entity = data.entity_by_name(rec["country"])
+        raw = rec.get("dxcc", "").strip()
+        if raw:  # an explicit DXCC field wins; 0 means "no entity" (e.g. /MM)
+            entity = ents.get(int(raw)) if raw.isdigit() else None
+        else:  # loggers that omit DXCC: callsign prefix (cty.dat), then country name
+            if rec.get("call"):
+                entity = data.entity_by_call(rec["call"])
+            if entity is None and rec.get("country"):
+                entity = data.entity_by_name(rec["country"])
         if entity is None:
             skipped += 1
             continue

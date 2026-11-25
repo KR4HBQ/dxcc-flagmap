@@ -11,13 +11,13 @@ ADIF = """header text
 <adif_ver:5>3.1.4<eoh>
 <call:4>W1AW<dxcc:3>291<country:24>United States of America<lotw_qsl_rcvd:1>Y<eor>
 <call:5>DL1AB<country:7>Germany<eor>
-<call:5>XX9ZZ<country:11>Nowhereland<eor>
+<call:4>Q1ZZ<country:11>Nowhereland<eor>
 """
 
 
 def test_parse_adif_skips_header_and_reads_fields():
     recs = list(parse_adif(ADIF))
-    assert [r["call"] for r in recs] == ["W1AW", "DL1AB", "XX9ZZ"]
+    assert [r["call"] for r in recs] == ["W1AW", "DL1AB", "Q1ZZ"]
     assert recs[0]["dxcc"] == "291"
 
 
@@ -34,10 +34,10 @@ def test_entities_loaded_and_flags_present():
     assert data.flag_path("gb-sct") is not None
 
 
-def test_count_entities_dxcc_number_then_country_name_fallback():
+def test_count_entities_dxcc_number_then_callsign_fallback():
     counts, skipped = stats.count_entities(parse_adif(ADIF))
     assert counts[291].qsos == 1 and counts[291].confirmed == 1
-    assert counts[230].qsos == 1 and counts[230].confirmed == 0   # matched by name: Germany
+    assert counts[230].qsos == 1 and counts[230].confirmed == 0   # no DXCC field: callsign DL -> Germany
     assert skipped == 1
 
 
@@ -220,3 +220,22 @@ def test_map_views_and_edge_entities_stay_inside():
 def test_cli_map_view_and_grid_labels(tmp_path):
     rc = cli.main(["--adif", str(SAMPLE), "-o", str(tmp_path), "--map-view", "full", "--grid-labels", "none"])
     assert rc == 0
+
+
+def test_entity_by_call_prefixes_portables_and_overrides():
+    def call(c):
+        e = data.entity_by_call(c)
+        return e.dxcc if e else None
+    assert call("W1AW") == 291
+    assert call("KH6/W1AW") == 110 and call("W1AW/KH6") == 110       # Hawaii either way round
+    assert call("EA8/DL1ABC") == 29 and call("DL1ABC/P") == 230
+    assert call("VE3XYZ/4") == 1 and call("KL7XX") == 6
+    assert call("KG4AA") == 105 and call("KG4ABC") == 291            # Guantanamo is KG4 + 2 letters only
+    assert call("W1AW/MM") is None and call("Q1ZZ") is None
+
+
+def test_count_entities_respects_explicit_dxcc_zero_and_country_last():
+    adif = ("<call:6>W1AW/M<dxcc:1>0<eor>"                       # logger says: no entity
+            "<call:4>Q1ZZ<country:7>Germany<eor>")                # unknown call, country name wins
+    counts, skipped = stats.count_entities(parse_adif(adif))
+    assert skipped == 1 and list(counts) == [230]

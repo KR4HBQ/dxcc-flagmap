@@ -28,7 +28,11 @@ Owner: Neal (KR4HBQ). Intended audience: any Wavelog user, so nothing may be har
    `view: cropped` (78N..56S, default) or `full`, flags 36x27, kept in bounds, footer in its own strip under the map.
 3. Entity coordinates now come from AD1C cty.dat (`scripts/apply_cty.py <cty.dat>` after build_data.py; matches by
    name, ALIASES prefix table, then prefix; KEEP = Canada/Antarctica stay on Natural Earth points). cty.dat is not bundled.
-   Re-run when cty.dat adds entities. Also copies the primary prefix. cty.dat is MIT (country-files.com/copyright), notice in LICENSES/cty-dat-MIT.txt.
+   Re-run when cty.dat adds entities. Also copies the primary prefix and writes
+   data/prefixes.json (prefix + exact-call table; WAE records mapped via WAE_PARENT) for `data.entity_by_call`,
+   used when a QSO has no DXCC field (order: DXCC field, callsign, country name; DXCC 0 = no entity).
+   Matches Wavelog on 99.87% of a real 5k-QSO log; misses are moved KL7/KH6/KP4 hams (Big CTY has more
+   exact calls if that ever matters). Cloudlog has no ADIF export API (checked 2026-11-25). cty.dat is MIT (country-files.com/copyright), notice in LICENSES/cty-dat-MIT.txt.
 4. Some entities have no flag (`zz`): grey placeholder. Consider special icons (UN, SMOM, ITU).
 5. Hosting: `.github/workflows/publish.yml` (nightly, GitHub Pages, config only via repo vars/secret, skipped when
    `vars.WAVELOG_URL` is unset; keepalive re-enables itself against the 60-day schedule shutoff; the API call succeeds, whether it
