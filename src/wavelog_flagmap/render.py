@@ -11,9 +11,9 @@ from .stats import EntityCount
 
 THEMES = {
     "light": dict(bg=(200, 244, 255), fg=(20, 20, 20), ocean=(176, 216, 240), land=(222, 214, 190),
-                  border=(60, 60, 60), line=(90, 90, 90)),
+                  border=(60, 60, 60), line=(90, 90, 90), muted=(70, 90, 105)),
     "dark": dict(bg=(24, 28, 36), fg=(235, 235, 235), ocean=(18, 32, 56), land=(52, 66, 58),
-                 border=(0, 0, 0), line=(200, 200, 200)),
+                 border=(0, 0, 0), line=(200, 200, 200), muted=(150, 160, 175)),
 }
 
 
@@ -27,7 +27,9 @@ class GridOptions:
     flag_w: int = 40
     flag_h: int = 30
     scale: int = 2           # supersampling factor for crisp text on high-dpi pages
+    labels: str = "prefix"   # text under each count: "prefix" (K, VE, DL...) | "none"
     footer: bool = True
+    footer_text: str | None = None
 
 
 @dataclass
@@ -41,6 +43,7 @@ class MapOptions:
     lat_bottom: float = -58.0
     max_flags: int = 400
     footer: bool = True
+    footer_text: str | None = None
     extra: dict = field(default_factory=dict)
 
 
@@ -81,10 +84,14 @@ def render_grid(rows: list[EntityCount], opt: GridOptions = GridOptions()) -> Im
 
     pad, gap_x, gap_y = 10 * s, 26 * s, 6 * s
     fw, fh = opt.flag_w * s, opt.flag_h * s
-    f_title, f_num = _font(24 * s, True), _font(17 * s)
+    labels = opt.labels == "prefix"
+    f_title = _font(24 * s, True)
+    f_num = _font((15 if labels else 17) * s, labels)
+    f_lab = _font(11 * s)
     f_small = _font(11 * s)
     digits = max((len(f"{r.value(opt.metric):,}") for r in shown), default=1)
-    num_w = int(digits * 10.5 * s) + 6 * s
+    lab_chars = max((len(r.entity.prefix) for r in shown), default=1) if labels else 0
+    num_w = max(int(digits * 10.5 * s), int(lab_chars * 7.5 * s)) + 6 * s
     cell_w = fw + 8 * s + num_w
     title_h = 38 * s
     foot_h = 22 * s if opt.footer else 0
@@ -100,9 +107,16 @@ def render_grid(rows: list[EntityCount], opt: GridOptions = GridOptions()) -> Im
         y = pad + title_h + row * (fh + gap_y)
         img.paste(_flag(r.entity.iso, fw, fh), (x, y))
         d.rectangle([x, y, x + fw - 1, y + fh - 1], outline=th["border"], width=max(1, s // 2))
-        d.text((x + fw + 8 * s, y + fh // 2), f"{r.value(opt.metric):,}", font=f_num, fill=th["fg"], anchor="lm")
+        tx = x + fw + 8 * s
+        if labels:
+            d.text((tx, y + fh // 2 - 1 * s), f"{r.value(opt.metric):,}", font=f_num, fill=th["fg"], anchor="ls")
+            d.text((tx, y + fh // 2 + 3 * s), r.entity.prefix, font=f_lab, fill=th["muted"], anchor="lt")
+        else:
+            d.text((tx, y + fh // 2), f"{r.value(opt.metric):,}", font=f_num, fill=th["fg"], anchor="lm")
     if opt.footer:
-        label = _summary(rows) + (" (confirmed)" if opt.metric == "confirmed" else "")
+        label = opt.footer_text or _summary(rows)
+        if opt.metric == "confirmed":
+            label += " - ranked by confirmed QSOs"
         d.text((pad, h - pad), label, font=f_small, fill=th["fg"], anchor="ld")
     return img.resize((img.width // s, img.height // s), Image.LANCZOS) if s > 1 else img
 
@@ -112,28 +126,42 @@ def _project(lon: float, lat: float, w: int, top: float, bottom: float, h: int) 
     return (lon + 180.0) / 360.0 * w, (top - lat) / (top - bottom) * h
 
 
-def _spread(points: list[list[float]], min_d: float, iters: int = 60) -> list[list[float]]:
-    """Naive repulsion so flags in crowded regions (Europe) do not sit on top of each other."""
+def _spread(points: list[list[float]], box_w: float, box_h: float, iters: int = 300,
+            pull: float = 0.03) -> list[list[float]]:
+    """Separate flag boxes in crowded regions (Europe, Caribbean).
+
+    Overlapping boxes are pushed apart along the axis where they overlap least (so flags
+    stack in rows/columns instead of drifting diagonally), and every flag is pulled
+    gently back toward its true position so clusters stay compact.
+    """
+    anchors = [p[:] for p in points]
     pos = [p[:] for p in points]
-    for _ in range(iters):
+    n = len(pos)
+    for it in range(iters):
         moved = False
-        for i in range(len(pos)):
-            for j in range(i + 1, len(pos)):
+        for i in range(n):
+            for j in range(i + 1, n):
                 dx, dy = pos[j][0] - pos[i][0], pos[j][1] - pos[i][1]
-                dist = math.hypot(dx, dy)
-                if dist >= min_d:
+                ox, oy = box_w - abs(dx), box_h - abs(dy)
+                if ox <= 0 or oy <= 0:
                     continue
-                if dist < 1e-6:
-                    dx, dy, dist = 1.0, 0.3 * ((i + j) % 3 - 1), 1.0
-                push = (min_d - dist) / 2 + 0.5
-                ux, uy = dx / dist, dy / dist
-                pos[i][0] -= ux * push
-                pos[i][1] -= uy * push
-                pos[j][0] += ux * push
-                pos[j][1] += uy * push
                 moved = True
-        if not moved:
+                if abs(dx) < 1e-6 and abs(dy) < 1e-6:
+                    dx = 1.0 if (i + j) % 2 else -1.0
+                if ox / box_w < oy / box_h:
+                    push, sx = ox / 2 + 0.25, 1.0 if dx >= 0 else -1.0
+                    pos[i][0] -= sx * push
+                    pos[j][0] += sx * push
+                else:
+                    push, sy = oy / 2 + 0.25, 1.0 if dy >= 0 else -1.0
+                    pos[i][1] -= sy * push
+                    pos[j][1] += sy * push
+        if not moved and it > 0:
             break
+        if moved and it < iters - 20:  # stop pulling near the end so overlaps resolve fully
+            for p, a in zip(pos, anchors):
+                p[0] += (a[0] - p[0]) * pull
+                p[1] += (a[1] - p[1]) * pull
     return pos
 
 
@@ -152,7 +180,7 @@ def render_map(rows: list[EntityCount], opt: MapOptions = MapOptions()) -> Image
 
     shown = rows[: opt.max_flags]
     anchors = [list(_project(r.entity.lon, r.entity.lat, w, opt.lat_top, opt.lat_bottom, h)) for r in shown]
-    placed = _spread(anchors, min_d=max(opt.flag_w, opt.flag_h) * 0.95)
+    placed = _spread(anchors, opt.flag_w + 2, opt.flag_h + 2)
     for a, p in zip(anchors, placed):  # leader lines first, flags on top
         if math.hypot(a[0] - p[0], a[1] - p[1]) > opt.flag_h * 0.6:
             d.line([tuple(a), tuple(p)], fill=th["line"], width=1)
@@ -168,5 +196,5 @@ def render_map(rows: list[EntityCount], opt: MapOptions = MapOptions()) -> Image
     if opt.title:
         d.text((12, 8), opt.title, font=_font(26, True), fill=th["fg"])
     if opt.footer:
-        d.text((12, h - 8), _summary(rows), font=_font(14), fill=th["fg"], anchor="ld")
+        d.text((12, h - 8), opt.footer_text or _summary(rows), font=_font(14), fill=th["fg"], anchor="ld")
     return img

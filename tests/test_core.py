@@ -193,3 +193,17 @@ def test_station_all_lists_locations_then_fetches_them(monkeypatch):
     cfg = config.Config(wavelog_url="https://wl.example", wavelog_key="k")
     assert cli._load_qsos(cfg) == []
     assert got == {"url": "https://wl.example/index.php/api/station_info/k", "station": [1, 7]}
+
+
+def test_confirmed_by_sources_and_summary():
+    import pytest
+    adif = ("<call:2>A1<dxcc:3>291<lotw_qsl_rcvd:1>Y<eor>"
+            "<call:2>B1<dxcc:3>230<eqsl_qsl_rcvd:1>Y<eor>"
+            "<call:2>C1<dxcc:3>227<qrzcom_qso_download_status:1>Y<eor>")
+    counts, _ = stats.count_entities(parse_adif(adif))  # default: lotw + qsl
+    assert {d for d, c in counts.items() if c.confirmed} == {291}
+    counts, _ = stats.count_entities(parse_adif(adif), ["lotw", "eqsl", "qrz"])
+    assert {d for d, c in counts.items() if c.confirmed} == {291, 230, 227}
+    assert stats.summary(counts) == "3 worked / 3 confirmed / 3 QSOs"
+    with pytest.raises(ValueError):
+        stats.count_entities(parse_adif(adif), ["bogus"])

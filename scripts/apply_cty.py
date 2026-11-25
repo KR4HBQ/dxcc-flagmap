@@ -6,8 +6,9 @@ Maintainer script, run after build_data.py:
     curl -o cty.dat https://www.country-files.com/cty/cty.dat
     python scripts/apply_cty.py cty.dat [--report]
 
-cty.dat itself is NOT bundled; only the per-entity latitude/longitude are copied.
-Records are matched to DXCC entities by primary prefix, then by normalized name.
+cty.dat itself is NOT bundled; only each entity's latitude/longitude and primary prefix
+(shown under each flag in the grid) are copied.
+Records are matched by ALIASES prefix, normalized name, then prefix.
 WAE-only entries (prefix starting with '*') are ignored. cty.dat longitudes are
 positive WEST, so they are negated here. Entities that do not match keep their
 Natural Earth / manual coordinates; --report lists them.
@@ -67,15 +68,15 @@ def main() -> int:
     hit = miss = 0
     unmatched = []
     for r in rows:
-        if r["dxcc"] in KEEP:
-            continue
         c = (by_prefix.get(ALIASES.get(r["dxcc"], "")) or by_name.get(norm(r["name"]))
              or by_prefix.get(r["prefix"].upper()))
         if c is None:
             miss += 1
             unmatched.append(f'{r["dxcc"]:>4} {r["prefix"]:<6} {r["name"]}')
             continue
-        r["lat"], r["lon"] = round(c["lat"], 2), round(c["lon"], 2)
+        if r["dxcc"] not in KEEP:
+            r["lat"], r["lon"] = round(c["lat"], 2), round(c["lon"], 2)
+        r["prefix"] = c["prefix"].split("/")[0]  # the familiar prefix (VE, not VA); "3Y/B" -> "3Y"
         hit += 1
     DATA.write_text(json.dumps(rows, indent=0, separators=(",", ":")))  # same format as build_data.py
     print(f"cty.dat records: {len(cty)}  entities updated: {hit}  unmatched: {miss}")

@@ -90,8 +90,9 @@ See [`examples/config.example.yaml`](examples/config.example.yaml). Common optio
 | Key | Meaning |
 |---|---|
 | `metric` | `qsos` (default) or `confirmed` |
+| `confirmed_by` | QSL sources that count as confirmed: `lotw`, `qsl`, `eqsl`, `qrz`, `clublog`, `dcl` (default `lotw,qsl`, as ARRL DXCC and Wavelog's DXCC page) |
 | `theme` | `light` or `dark` |
-| `grid.rows`, `grid.max_entries` | entries per column and total shown in the grid |
+| `grid.rows`, `grid.max_entries`, `grid.labels` | entries per column, total shown, and `prefix`/`none` under each count |
 | `map.width`, `map.flag_w`, `map.flag_h` | map image size and flag size |
 
 ## Limitations

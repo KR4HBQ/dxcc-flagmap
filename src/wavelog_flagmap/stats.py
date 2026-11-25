@@ -19,14 +19,37 @@ class EntityCount:
         return self.confirmed if metric == "confirmed" else self.qsos
 
 
-def _confirmed(rec: dict[str, str]) -> bool:
-    """LoTW, paper/direct QSL and eQSL confirmations all count."""
-    return any(rec.get(k, "").upper() == "Y"
-               for k in ("lotw_qsl_rcvd", "qsl_rcvd", "eqsl_qsl_rcvd"))
+# confirmation source -> ADIF field that is "Y" when the QSO is confirmed there
+CONFIRM_FIELDS = {
+    "lotw": "lotw_qsl_rcvd",
+    "qsl": "qsl_rcvd",            # paper / direct / bureau card
+    "eqsl": "eqsl_qsl_rcvd",
+    "qrz": "qrzcom_qso_download_status",
+    "clublog": "clublog_qso_download_status",
+    "dcl": "dcl_qsl_rcvd",
+}
+# ARRL DXCC accepts LoTW and QSL cards; this is also Wavelog's default on its DXCC award page.
+DEFAULT_CONFIRM = ("lotw", "qsl")
 
 
-def count_entities(qsos: Iterable[dict[str, str]]) -> tuple[dict[int, EntityCount], int]:
+def _confirmed(rec: dict[str, str], fields: tuple[str, ...]) -> bool:
+    return any(rec.get(f, "").upper() == "Y" for f in fields)
+
+
+def confirm_fields(sources: Iterable[str]) -> tuple[str, ...]:
+    out = []
+    for s in sources:
+        key = s.strip().lower()
+        if key not in CONFIRM_FIELDS:
+            raise ValueError(f"unknown confirmation source {s!r}; use {', '.join(CONFIRM_FIELDS)}")
+        out.append(CONFIRM_FIELDS[key])
+    return tuple(out)
+
+
+def count_entities(qsos: Iterable[dict[str, str]], confirmed_by: Iterable[str] = DEFAULT_CONFIRM,
+                   ) -> tuple[dict[int, EntityCount], int]:
     """Return ({dxcc: EntityCount}, skipped) where skipped = records with no resolvable entity."""
+    fields = confirm_fields(confirmed_by)
     ents = data.entities()
     out: dict[int, EntityCount] = {}
     skipped = 0
@@ -42,9 +65,17 @@ def count_entities(qsos: Iterable[dict[str, str]]) -> tuple[dict[int, EntityCoun
             continue
         ec = out.setdefault(entity.dxcc, EntityCount(entity))
         ec.qsos += 1
-        if _confirmed(rec):
+        if _confirmed(rec, fields):
             ec.confirmed += 1
     return out, skipped
+
+
+def summary(counts: dict[int, EntityCount]) -> str:
+    """Footer line, e.g. '124 worked / 96 confirmed / 5,210 QSOs'."""
+    worked = len(counts)
+    confirmed = sum(1 for c in counts.values() if c.confirmed)
+    qsos = sum(c.qsos for c in counts.values())
+    return f"{worked} worked / {confirmed} confirmed / {qsos:,} QSOs"
 
 
 def ranked(counts: dict[int, EntityCount], metric: str = "qsos") -> list[EntityCount]:

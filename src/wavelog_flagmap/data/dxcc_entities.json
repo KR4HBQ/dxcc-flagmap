@@ -6,7 +6,7 @@
 "lat":56.0,
 "lon":-106.0,
 "continent":"NA",
-"prefix":"VA"
+"prefix":"VE"
 },
 {
 "dxcc":3,
@@ -69,7 +69,7 @@
 "lat":-37.85,
 "lon":77.53,
 "continent":"AF",
-"prefix":"FT/Z"
+"prefix":"FT"
 },
 {
 "dxcc":11,
@@ -114,7 +114,7 @@
 "lat":55.88,
 "lon":84.08,
 "continent":"AS",
-"prefix":"UA0"
+"prefix":"UA9"
 },
 {
 "dxcc":16,
@@ -285,7 +285,7 @@
 "lat":-46.42,
 "lon":51.75,
 "continent":"AF",
-"prefix":"FT/W"
+"prefix":"FT"
 },
 {
 "dxcc":43,
@@ -321,7 +321,7 @@
 "lat":-27.1,
 "lon":-109.37,
 "continent":"SA",
-"prefix":"CE0"
+"prefix":"CE0Y"
 },
 {
 "dxcc":48,
@@ -348,7 +348,7 @@
 "lat":21.32,
 "lon":-100.23,
 "continent":"NA",
-"prefix":"XA"
+"prefix":"XE"
 },
 {
 "dxcc":51,
@@ -384,7 +384,7 @@
 "lat":53.65,
 "lon":41.37,
 "continent":"EU",
-"prefix":"UA1"
+"prefix":"UA"
 },
 {
 "dxcc":56,
@@ -393,7 +393,7 @@
 "lat":-3.85,
 "lon":-32.43,
 "continent":"SA",
-"prefix":"PP0F"
+"prefix":"PY0F"
 },
 {
 "dxcc":60,
@@ -411,7 +411,7 @@
 "lat":80.68,
 "lon":49.92,
 "continent":"EU",
-"prefix":"R1/F"
+"prefix":"R1FJ"
 },
 {
 "dxcc":62,
@@ -474,7 +474,7 @@
 "lat":21.5,
 "lon":-80.0,
 "continent":"NA",
-"prefix":"CL"
+"prefix":"CM"
 },
 {
 "dxcc":71,
@@ -555,7 +555,7 @@
 "lat":15.0,
 "lon":-87.0,
 "continent":"NA",
-"prefix":"HQ"
+"prefix":"HR"
 },
 {
 "dxcc":82,
@@ -591,7 +591,7 @@
 "lat":9.0,
 "lon":-80.0,
 "continent":"NA",
-"prefix":"HO"
+"prefix":"HP"
 },
 {
 "dxcc":89,
@@ -672,7 +672,7 @@
 "lat":-11.55,
 "lon":47.28,
 "continent":"AF",
-"prefix":"FT/G"
+"prefix":"FT"
 },
 {
 "dxcc":100,
@@ -681,7 +681,7 @@
 "lat":-32.5,
 "lon":-62.13,
 "continent":"SA",
-"prefix":"LO"
+"prefix":"LU"
 },
 {
 "dxcc":103,
@@ -735,7 +735,7 @@
 "lat":-10.0,
 "lon":-53.0,
 "continent":"SA",
-"prefix":"PP"
+"prefix":"PY"
 },
 {
 "dxcc":109,
@@ -762,7 +762,7 @@
 "lat":-53.08,
 "lon":73.5,
 "continent":"AF",
-"prefix":"VK0"
+"prefix":"VK0H"
 },
 {
 "dxcc":112,
@@ -771,7 +771,7 @@
 "lat":-30.0,
 "lon":-71.0,
 "continent":"SA",
-"prefix":"CA"
+"prefix":"CE"
 },
 {
 "dxcc":114,
@@ -789,7 +789,7 @@
 "lat":5.0,
 "lon":-74.0,
 "continent":"SA",
-"prefix":"HJ"
+"prefix":"HK"
 },
 {
 "dxcc":117,
@@ -798,7 +798,7 @@
 "lat":46.17,
 "lon":6.05,
 "continent":"EU",
-"prefix":"4U"
+"prefix":"4U1I"
 },
 {
 "dxcc":118,
@@ -843,7 +843,7 @@
 "lat":-17.05,
 "lon":42.72,
 "continent":"AF",
-"prefix":"FT/J"
+"prefix":"FT"
 },
 {
 "dxcc":125,
@@ -852,7 +852,7 @@
 "lat":-33.6,
 "lon":-78.85,
 "continent":"SA",
-"prefix":"CE0"
+"prefix":"CE0Z"
 },
 {
 "dxcc":126,
@@ -888,7 +888,7 @@
 "lat":-49.0,
 "lon":69.27,
 "continent":"AF",
-"prefix":"FT/X"
+"prefix":"FT"
 },
 {
 "dxcc":132,
@@ -987,7 +987,7 @@
 "lat":-33.0,
 "lon":-56.0,
 "continent":"SA",
-"prefix":"CV"
+"prefix":"CX"
 },
 {
 "dxcc":145,
@@ -1059,7 +1059,7 @@
 "lat":-54.6,
 "lon":158.88,
 "continent":"OC",
-"prefix":"VK0"
+"prefix":"VK0M"
 },
 {
 "dxcc":157,
@@ -1176,7 +1176,7 @@
 "lat":-39.03,
 "lon":174.47,
 "continent":"OC",
-"prefix":"ZK"
+"prefix":"ZL"
 },
 {
 "dxcc":171,
@@ -1239,7 +1239,7 @@
 "lat":24.28,
 "lon":153.97,
 "continent":"OC",
-"prefix":"JD1"
+"prefix":"JD"
 },
 {
 "dxcc":179,
@@ -1257,7 +1257,7 @@
 "lat":40.0,
 "lon":24.0,
 "continent":"EU",
-"prefix":"SV/A"
+"prefix":"SV"
 },
 {
 "dxcc":181,
@@ -1266,7 +1266,7 @@
 "lat":-18.25,
 "lon":35.0,
 "continent":"AF",
-"prefix":"C8"
+"prefix":"C9"
 },
 {
 "dxcc":182,
@@ -1338,7 +1338,7 @@
 "lat":27.05,
 "lon":142.2,
 "continent":"AS",
-"prefix":"JD1"
+"prefix":"JD"
 },
 {
 "dxcc":195,
@@ -1383,7 +1383,7 @@
 "lat":18.18,
 "lon":-66.55,
 "continent":"NA",
-"prefix":"KP3"
+"prefix":"KP4"
 },
 {
 "dxcc":203,
@@ -1401,7 +1401,7 @@
 "lat":18.77,
 "lon":-110.97,
 "continent":"NA",
-"prefix":"XA4"
+"prefix":"XF4"
 },
 {
 "dxcc":205,
@@ -1500,7 +1500,7 @@
 "lat":-26.28,
 "lon":-80.07,
 "continent":"SA",
-"prefix":"CE0"
+"prefix":"CE0X"
 },
 {
 "dxcc":219,
@@ -1518,7 +1518,7 @@
 "lat":56.0,
 "lon":10.0,
 "continent":"EU",
-"prefix":"OU"
+"prefix":"OZ"
 },
 {
 "dxcc":222,
@@ -1545,7 +1545,7 @@
 "lat":61.38,
 "lon":24.82,
 "continent":"EU",
-"prefix":"OF"
+"prefix":"OH"
 },
 {
 "dxcc":225,
@@ -1554,7 +1554,7 @@
 "lat":40.15,
 "lon":9.27,
 "continent":"EU",
-"prefix":"IS0"
+"prefix":"IS"
 },
 {
 "dxcc":227,
@@ -1572,7 +1572,7 @@
 "lat":51.0,
 "lon":10.0,
 "continent":"EU",
-"prefix":"DA"
+"prefix":"DL"
 },
 {
 "dxcc":232,
@@ -1590,7 +1590,7 @@
 "lat":36.15,
 "lon":-5.37,
 "continent":"EU",
-"prefix":"ZB2"
+"prefix":"ZB"
 },
 {
 "dxcc":234,
@@ -1608,7 +1608,7 @@
 "lat":-54.48,
 "lon":-37.08,
 "continent":"SA",
-"prefix":"VP0"
+"prefix":"VP8"
 },
 {
 "dxcc":236,
@@ -1635,7 +1635,7 @@
 "lat":-60.6,
 "lon":-45.55,
 "continent":"SA",
-"prefix":"VP0"
+"prefix":"VP8"
 },
 {
 "dxcc":239,
@@ -1653,7 +1653,7 @@
 "lat":-58.43,
 "lon":-26.33,
 "continent":"SA",
-"prefix":"VP0"
+"prefix":"VP8"
 },
 {
 "dxcc":241,
@@ -1662,7 +1662,7 @@
 "lat":-62.08,
 "lon":-58.67,
 "continent":"SA",
-"prefix":"VP0"
+"prefix":"VP8"
 },
 {
 "dxcc":242,
@@ -1698,7 +1698,7 @@
 "lat":9.88,
 "lon":114.23,
 "continent":"AS",
-"prefix":""
+"prefix":"1S"
 },
 {
 "dxcc":248,
@@ -1752,7 +1752,7 @@
 "lat":0.0,
 "lon":-29.0,
 "continent":"SA",
-"prefix":"PP0S"
+"prefix":"PY0S"
 },
 {
 "dxcc":254,
@@ -1842,7 +1842,7 @@
 "lat":52.28,
 "lon":18.67,
 "continent":"EU",
-"prefix":"SN"
+"prefix":"SP"
 },
 {
 "dxcc":270,
@@ -1860,7 +1860,7 @@
 "lat":39.5,
 "lon":-8.0,
 "continent":"EU",
-"prefix":"CQ"
+"prefix":"CT"
 },
 {
 "dxcc":273,
@@ -1869,7 +1869,7 @@
 "lat":-20.5,
 "lon":-29.32,
 "continent":"SA",
-"prefix":"PP0T"
+"prefix":"PY0T"
 },
 {
 "dxcc":274,
@@ -1896,7 +1896,7 @@
 "lat":-15.88,
 "lon":54.5,
 "continent":"AF",
-"prefix":"FT/T"
+"prefix":"FT"
 },
 {
 "dxcc":277,
@@ -1968,7 +1968,7 @@
 "lat":58.9,
 "lon":15.33,
 "continent":"EU",
-"prefix":"SA"
+"prefix":"SM"
 },
 {
 "dxcc":285,
@@ -2013,7 +2013,7 @@
 "lat":40.75,
 "lon":-73.97,
 "continent":"NA",
-"prefix":"4U"
+"prefix":"4U1U"
 },
 {
 "dxcc":291,
@@ -2031,7 +2031,7 @@
 "lat":41.4,
 "lon":63.97,
 "continent":"AS",
-"prefix":"UJ"
+"prefix":"UK"
 },
 {
 "dxcc":293,
@@ -2067,7 +2067,7 @@
 "lat":44.0,
 "lon":21.0,
 "continent":"EU",
-"prefix":"YT"
+"prefix":"YU"
 },
 {
 "dxcc":297,
@@ -2166,7 +2166,7 @@
 "lat":20.0,
 "lon":96.37,
 "continent":"AS",
-"prefix":"XY"
+"prefix":"XZ"
 },
 {
 "dxcc":312,
@@ -2184,7 +2184,7 @@
 "lat":7.6,
 "lon":80.7,
 "continent":"AS",
-"prefix":"4P"
+"prefix":"4S"
 },
 {
 "dxcc":318,
@@ -2193,7 +2193,7 @@
 "lat":36.0,
 "lon":102.0,
 "continent":"AS",
-"prefix":"B"
+"prefix":"BY"
 },
 {
 "dxcc":321,
@@ -2409,7 +2409,7 @@
 "lat":23.72,
 "lon":120.88,
 "continent":"AS",
-"prefix":"BU"
+"prefix":"BV"
 },
 {
 "dxcc":387,
@@ -2445,7 +2445,7 @@
 "lat":28.0,
 "lon":2.0,
 "continent":"AF",
-"prefix":"7R"
+"prefix":"7X"
 },
 {
 "dxcc":401,
@@ -2535,7 +2535,7 @@
 "lat":-3.12,
 "lon":23.03,
 "continent":"AF",
-"prefix":"9O"
+"prefix":"9Q"
 },
 {
 "dxcc":416,
@@ -2589,7 +2589,7 @@
 "lat":0.32,
 "lon":38.15,
 "continent":"AF",
-"prefix":"5Y"
+"prefix":"5Z"
 },
 {
 "dxcc":432,
@@ -2706,7 +2706,7 @@
 "lat":15.2,
 "lon":-14.63,
 "continent":"AF",
-"prefix":"6V"
+"prefix":"6W"
 },
 {
 "dxcc":458,
@@ -2733,7 +2733,7 @@
 "lat":-29.07,
 "lon":22.63,
 "continent":"AF",
-"prefix":"ZR"
+"prefix":"ZS"
 },
 {
 "dxcc":464,
@@ -2805,7 +2805,7 @@
 "lat":-14.22,
 "lon":26.73,
 "continent":"AF",
-"prefix":"9I"
+"prefix":"9J"
 },
 {
 "dxcc":483,

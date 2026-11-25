@@ -10,7 +10,7 @@ from pathlib import Path
 from . import __version__, config as cfgmod, wavelog
 from .adif import parse_adif
 from .render import GridOptions, MapOptions, render_grid, render_map
-from .stats import METRICS, count_entities, ranked
+from .stats import CONFIRM_FIELDS, METRICS, count_entities, ranked, summary
 
 
 def _atomic_save(img, path: Path) -> None:
@@ -48,6 +48,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-o", "--output-dir", help="where to write the images (default ./out)")
     p.add_argument("--callsign", help="callsign shown in the titles")
     p.add_argument("--metric", choices=METRICS, help="count QSOs or confirmed QSOs per entity")
+    p.add_argument("--confirmed-by", metavar="SOURCES",
+                   help=f"confirmation sources that count, comma separated ({','.join(CONFIRM_FIELDS)}); "
+                        "default lotw,qsl")
     p.add_argument("--theme", choices=("light", "dark"))
     p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     return p
@@ -72,11 +75,16 @@ def main(argv: list[str] | None = None) -> int:
         cfg.callsign = args.callsign
     if args.metric:
         cfg.metric = args.metric
+    if args.confirmed_by:
+        cfg.confirmed_by = cfgmod._list(args.confirmed_by)
     if args.theme:
         cfg.theme = args.theme
 
     qsos = _load_qsos(cfg)
-    counts, skipped = count_entities(qsos)
+    try:
+        counts, skipped = count_entities(qsos, cfg.confirmed_by)
+    except ValueError as exc:
+        raise SystemExit(f"error: {exc}")
     rows = ranked(counts, cfg.metric)
     if not rows:
         print("no entities found - nothing to render", file=sys.stderr)
@@ -86,17 +94,18 @@ def main(argv: list[str] | None = None) -> int:
     out.mkdir(parents=True, exist_ok=True)
     call = cfg.callsign
     gopt = GridOptions(title=cfg.grid.pop("title", f"{call} Worked DXCC".strip()),
-                       metric=cfg.metric, theme=cfg.theme, **cfg.grid)
-    mopt = MapOptions(title=cfg.map.pop("title", ""), theme=cfg.theme, **cfg.map)
+                       metric=cfg.metric, theme=cfg.theme, footer_text=summary(counts), **cfg.grid)
+    mopt = MapOptions(title=cfg.map.pop("title", ""), theme=cfg.theme, footer_text=summary(counts), **cfg.map)
     _atomic_save(render_grid(rows, gopt), out / "dxcc-grid.png")
     _atomic_save(render_map(rows, mopt), out / "dxcc-map.png")
     (out / "dxcc-stats.json").write_text(json.dumps({
-        "callsign": call, "metric": cfg.metric, "qsos": len(qsos), "skipped_no_entity": skipped,
+        "callsign": call, "metric": cfg.metric, "confirmed_by": cfg.confirmed_by,
+        "worked": len(counts), "confirmed": sum(1 for c in counts.values() if c.confirmed), "qsos": len(qsos), "skipped_no_entity": skipped,
         "entities": [{"dxcc": r.entity.dxcc, "name": r.entity.name, "qsos": r.qsos,
                       "confirmed": r.confirmed} for r in rows],
     }, indent=1))
     print(f"wrote {out}/dxcc-grid.png, dxcc-map.png, dxcc-stats.json "
-          f"({len(rows)} entities from {len(qsos)} QSOs; {skipped} skipped)")
+          f"({summary(counts)}; {skipped} QSOs without a DXCC entity skipped)")
     return 0
 
 

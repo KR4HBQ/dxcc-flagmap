@@ -2,7 +2,9 @@
 # ${VAR} values are read from environment variables, so keep secrets out of this file.
 
 callsign: N0CALL            # shown in the grid title
-metric: qsos                # qsos = QSOs per entity | confirmed = confirmed QSOs (LoTW / QSL / eQSL)
+metric: qsos                # qsos = QSOs per entity | confirmed = confirmed QSOs per entity
+confirmed_by: lotw,qsl      # what counts as confirmed: lotw, qsl, eqsl, qrz, clublog, dcl
+                            # (lotw,qsl = ARRL DXCC rules and Wavelog's DXCC page default)
 theme: light                # light | dark
 output_dir: ./out           # dxcc-grid.png, dxcc-map.png, dxcc-stats.json are written here
 
@@ -22,6 +24,7 @@ wavelog:
 grid:
   rows: 8                   # entries per column
   max_entries: 48
+  labels: prefix            # prefix under each count (K, VE, DL...) | none
   # title: "My DX"
 map:
   width: 1600

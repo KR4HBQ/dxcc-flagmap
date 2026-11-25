@@ -20,6 +20,7 @@ class Config:
 
     callsign: str = ""
     metric: str = "qsos"             # "qsos" | "confirmed"
+    confirmed_by: list[str] = field(default_factory=lambda: ["lotw", "qsl"])
     theme: str = "light"             # "light" | "dark"
     output_dir: str = "./out"
     grid: dict[str, Any] = field(default_factory=dict)
@@ -32,6 +33,13 @@ def _expand(v: Any) -> Any:
     if isinstance(v, dict):
         return {k: _expand(x) for k, x in v.items()}
     return v
+
+
+def _list(v: Any) -> list[str]:
+    if v is None:
+        return []
+    items = v if isinstance(v, (list, tuple)) else str(v).split(",")
+    return [str(x).strip().lower() for x in items if str(x).strip()]
 
 
 def parse_station_ids(v: Any) -> list[str]:
@@ -68,6 +76,7 @@ def load(path: str | Path | None) -> Config:
         station_ids=parse_station_ids(wl.get("station_id")),
         callsign=raw.get("callsign", ""),
         metric=raw.get("metric", "qsos"),
+        confirmed_by=_list(raw.get("confirmed_by")) or ["lotw", "qsl"],
         theme=raw.get("theme", "light"),
         output_dir=raw.get("output_dir", "./out"),
         grid=raw.get("grid", {}) or {},
