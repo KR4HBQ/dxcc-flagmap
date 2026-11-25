@@ -65,12 +65,14 @@ GitHub's runners and serves them from GitHub Pages. Your Wavelog must be reachab
    - **Variables** `WAVELOG_URL` (e.g. `https://log.example.com`) and `CALLSIGN`. Optional:
      `WAVELOG_STATION_ID` (default `all`) and `FLAGMAP_ARGS` (extra flags, e.g. `--theme dark`).
 3. *Settings > Pages > Build and deployment > Source*: **GitHub Actions**.
-4. *Actions > publish > Run workflow* once to publish right away.
+4. In the repository's top **Actions** tab (not *Settings > Actions*): *publish > Run workflow* once to
+   publish right away. The run can take a minute to appear in the list.
 
 The images are then at `https://<user>.github.io/<repo>/dxcc-grid.png` and `.../dxcc-map.png`.
 
 **Custom domain (optional):** add a DNS `CNAME` record such as `flagmap.example.com -> <user>.github.io`,
-then enter the name under *Settings > Pages > Custom domain* and tick *Enforce HTTPS*. On Cloudflare,
+then enter the name under *Settings > Pages > Custom domain* (the field appears once the source is
+*GitHub Actions*) and tick *Enforce HTTPS*. On Cloudflare,
 set the record to *DNS only* (grey cloud) so GitHub can issue the certificate and nightly updates are not
 held in Cloudflare's cache.
 

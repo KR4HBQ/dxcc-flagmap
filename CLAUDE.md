@@ -30,7 +30,8 @@ Owner: Neal (KR4HBQ). Intended audience: any Wavelog user, so nothing may be har
    Re-run when cty.dat adds entities. Also copies the primary prefix. cty.dat is MIT (country-files.com/copyright), notice in LICENSES/cty-dat-MIT.txt.
 4. Some entities have no flag (`zz`): grey placeholder. Consider special icons (UN, SMOM, ITU).
 5. Hosting: `.github/workflows/publish.yml` (nightly, GitHub Pages, config only via repo vars/secret, skipped when
-   `vars.WAVELOG_URL` is unset; keepalive re-enables itself against the 60-day schedule shutoff - unverified).
+   `vars.WAVELOG_URL` is unset; keepalive re-enables itself against the 60-day schedule shutoff; the API call succeeds, whether it
+   actually resets the 60-day timer is unconfirmed). LIVE since 2026-11-25 for the owner's setup (repo vars, not files).
    Optional: publish to PyPI, WordPress/SFTP upload plugin,
    per-band or per-mode filters, "worked vs confirmed" overlay.
 6. Confirm the dxcc-json (Apache-2.0) attribution in THIRD_PARTY_NOTICES.md is sufficient before a 1.0 release.
