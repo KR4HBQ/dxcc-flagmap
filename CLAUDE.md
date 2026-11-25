@@ -18,9 +18,10 @@ Owner: Neal (KR4HBQ). Intended audience: any Wavelog user, so nothing may be har
 - `examples/` config + synthetic sample ADIF (`make_sample.py`); `docs/` README images
 
 ## Open items / next steps
-1. **Verify the Wavelog API clients against a live instance.** v1 (`POST /index.php/api/get_contacts_adif`, payload
-   `key`, `station_id`, `fetchfromid`) matches the Wavelog wiki, but the response shape (`adif`, `lastfetchedid`) is assumed.
-   The v2 client's paging headers are GUESSED - check docs.wavelog.org/developer/api-v2/qso/ and fix.
+1. **Wavelog API clients.** v1 checked against Wavelog's `Api::get_contacts_adif` source (JSON body `key`,
+   `station_id`, `fetchfromid`; response `status`, `lastfetchedid`, `exported_qsos`, `adif` (null when empty);
+   errors `{status: failed, reason}` with 4xx; 20000 QSOs/call default). v2 rewritten from the docs
+   (`data.{exported,lastfetchedid,adif}`, `meta.has_more`, page via `since_id`), still EXPERIMENTAL: not run live yet.
 2. Test with a real log (Neal's Wavelog, ~hundreds of entities) and tune the look (spacing, crowded Europe).
 3. Entity coordinates are approximate (Natural Earth label points + a small manual table). Better: derive from
    AD1C cty.dat (not reachable from the cloud sandbox this was scaffolded in).

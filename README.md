@@ -91,9 +91,10 @@ See [`examples/config.example.yaml`](examples/config.example.yaml). Common optio
   official cty.dat reference points. Flags in crowded regions (Europe, Caribbean) are spread apart
   with a leader line to the true position.
 - Some entities have no national flag (a grey placeholder is drawn).
-- The Wavelog **v2** API client is experimental. The v1 `get_contacts_adif` client follows the
-  documented request format but should be checked against your Wavelog version. Please file an
-  issue if your instance behaves differently.
+- The v1 client (`api: v1`, `POST /index.php/api/get_contacts_adif`) matches the request and
+  response format of Wavelog's `Api` controller. The **v2** client (`api: v2`, a `wl2_` token with
+  the `qso:read` scope, Wavelog 3.1.0+) is written from the v2 API docs and is **experimental** until
+  checked against a live instance. Please file an issue if your instance behaves differently.
 
 ## Development
 

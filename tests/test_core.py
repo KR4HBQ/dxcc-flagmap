@@ -97,3 +97,59 @@ def test_fetch_v1_pages_until_no_new_ids(monkeypatch):
     assert len(chunks) == 2
     assert [c[1] for c in calls] == [0, 10, 20]
     assert calls[0][0] == "https://wl.example/index.php/api/get_contacts_adif"
+
+
+class _Resp:
+    def __init__(self, body, status_code=200):
+        self._b, self.status_code = body, status_code
+
+    def json(self):
+        if isinstance(self._b, Exception):
+            raise self._b
+        return self._b
+
+
+def test_fetch_v1_null_adif_when_nothing_new(monkeypatch):
+    # Shape returned by Wavelog's Api::get_contacts_adif when no rows match
+    body = {"status": "successful", "message": "No new QSOs available.", "lastfetchedid": 0,
+            "exported_qsos": 0, "adif": None}
+    monkeypatch.setattr(wavelog.requests, "post", lambda url, json, timeout: _Resp(body))
+    assert list(wavelog.fetch_v1("https://wl.example", "k", 1)) == []
+
+
+def test_fetch_v1_error_reason_is_reported(monkeypatch):
+    import pytest
+    body = {"status": "failed", "reason": "Station ID not accessible for this API key"}
+    monkeypatch.setattr(wavelog.requests, "post", lambda url, json, timeout: _Resp(body, 401))
+    with pytest.raises(wavelog.WavelogError, match="401.*Station ID not accessible"):
+        list(wavelog.fetch_v1("https://wl.example", "k", 99))
+
+
+def test_fetch_v2_pages_with_since_id_and_has_more(monkeypatch):
+    calls = []
+    pages = [
+        {"data": {"exported": 2, "lastfetchedid": 10, "adif": "<call:1>A<eor><call:1>B<eor>"},
+         "meta": {"page": 1, "has_more": True}},
+        {"data": {"exported": 1, "lastfetchedid": 15, "adif": "<call:1>C<eor>"},
+         "meta": {"page": 1, "has_more": False}},
+    ]
+
+    def fake_get(url, params, headers, timeout):
+        calls.append((url, dict(params), headers))
+        return _Resp(pages[len(calls) - 1])
+
+    monkeypatch.setattr(wavelog.requests, "get", fake_get)
+    chunks = list(wavelog.fetch_v2("https://wl.example/", "wl2_x", 3))
+    assert len(chunks) == 2
+    assert [c[1]["since_id"] for c in calls] == [0, 10]
+    assert calls[0][1]["format"] == "adif" and calls[0][1]["station_id"] == 3
+    assert calls[0][2]["Authorization"] == "Bearer wl2_x"
+    assert calls[0][0] == "https://wl.example/index.php/api/v2/qso"
+
+
+def test_fetch_v2_error_envelope(monkeypatch):
+    import pytest
+    body = {"error": {"code": "invalid_token", "message": "Token is invalid", "details": None}}
+    monkeypatch.setattr(wavelog.requests, "get", lambda *a, **k: _Resp(body, 401))
+    with pytest.raises(wavelog.WavelogError, match="invalid_token"):
+        list(wavelog.fetch_v2("https://wl.example", "bad"))
