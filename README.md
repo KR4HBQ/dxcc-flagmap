@@ -62,8 +62,9 @@ wavelog-flagmap --source qrz --callsign N0CALL -o ./out
 ```
 
 Club Log's export marks LoTW and card confirmations alike as `QSL_RCVD`, so the default
-`confirmed_by` (`lotw,qsl`) is right for it but LoTW alone can't be singled out. With QRZ,
-`--confirmed-by qrz` counts QSOs confirmed in the QRZ Logbook.
+`confirmed_by` (`lotw,qsl`) is right for it but LoTW alone can't be singled out. The QRZ Logbook
+keeps the LoTW / QSL fields your logger uploaded, so the default works there too; `--confirmed-by qrz`
+instead counts QRZ's own confirmations, which are much looser than DXCC rules.
 
 From your Wavelog instance:
 

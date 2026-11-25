@@ -368,7 +368,7 @@ def test_qrz_fetch_pages_by_logid_and_normalizes(monkeypatch):
         after = int(data["OPTION"].split("AFTERLOGID:")[1])
         page = [r for i, r in enumerate(recs) if 100 + i >= after][:2]
         if not page:
-            return _Http("RESULT=FAIL&REASON=no log entries found&COUNT=0")
+            return _Http("COUNT=0&RESULT=FAIL")  # what QRZ really sends past the end
         return _Http(f"RESULT=OK&COUNT=5&ADIF={quote(''.join(page))}")
 
     monkeypatch.setattr(qrz.requests, "post", fake_post)
@@ -378,10 +378,13 @@ def test_qrz_fetch_pages_by_logid_and_normalizes(monkeypatch):
     assert "qrzcom_qso_download_status" not in out[1]
     counts, _ = stats.count_entities(out, ["qrz"])
     assert counts[230].confirmed == 1
+    calls.clear()  # a log that ends exactly on a page boundary: the next fetch is past the end
+    assert len([r for chunk in qrz.fetch("KEY", page=5) for r in parse_adif(chunk)]) == 5
+    assert calls == ["MAX:5,AFTERLOGID:0", "MAX:5,AFTERLOGID:105"]
 
 
 def test_qrz_response_parsing_and_auth_error(monkeypatch):
-    raw = qrz._parse("RESULT=OK&COUNT=1&ADIF=&lt;call:4&gt;K1AB&lt;eor&gt;")   # HTML-escaped, not URL-encoded
+    raw = qrz._parse("RESULT=OK&COUNT=1&ADIF=&lt;call:4&gt;K1AB&lt;eor&gt;")   # HTML-escaped (what QRZ sends)
     assert raw["RESULT"] == "OK" and raw["ADIF"] == "<call:4>K1AB<eor>"
     raw = qrz._parse("RESULT=OK&ADIF=<call:4>K1AB<comment:3>a&b<eor>&COUNT=1")  # raw '&' inside the ADIF
     assert "a&b" in raw["ADIF"]

@@ -54,8 +54,8 @@ def fetch(key: str, *, page: int = PAGE, max_pages: int = 1000):
         body = _parse(resp.content.decode("utf-8", errors="replace"))
         result = body.get("RESULT", "").upper()
         adif = body.get("ADIF", "")
-        if result == "FAIL" and "no log entries" in body.get("REASON", "").lower():
-            return  # past the last page (QRZ reports an empty fetch as a failure)
+        if result == "FAIL" and body.get("COUNT") == "0" and not body.get("REASON"):
+            return  # past the last page: QRZ answers "COUNT=0&RESULT=FAIL" to an empty fetch
         if result != "OK":
             reason = body.get("REASON") or result or "no RESULT in the response"
             if result == "AUTH":
