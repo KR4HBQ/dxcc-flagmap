@@ -24,7 +24,8 @@ Owner: Neal (KR4HBQ). Intended audience: any Wavelog user, so nothing may be har
    VERIFIED live 2026-11-25. `station_id: all` (default) lists ids via `GET /api/station_info/{key}`. v2 rewritten from the docs
    (`data.{exported,lastfetchedid,adif}`, `meta.has_more`, page via `since_id`), VERIFIED live 2026-11-25: identical QSOs to v1.
 2. Real-log tuning done (2026-11-25, ~5k QSOs / 124 entities): prefix labels under grid counts, box-based map
-   spreading, `confirmed_by` (default lotw,qsl = Wavelog DXCC page default; 124 worked / 96 confirmed matched Wavelog exactly). Still to check: QRZ embed size.
+   spreading, `confirmed_by` (default lotw,qsl = Wavelog DXCC page default; 124 worked / 96 confirmed matched Wavelog exactly). QRZ embed checked: grid fonts/flags enlarged, map
+   `view: cropped` (78N..56S, default) or `full`, flags 36x27, kept in bounds, footer in its own strip under the map.
 3. Entity coordinates now come from AD1C cty.dat (`scripts/apply_cty.py <cty.dat>` after build_data.py; matches by
    name, ALIASES prefix table, then prefix; KEEP = Canada/Antarctica stay on Natural Earth points). cty.dat is not bundled.
    Re-run when cty.dat adds entities. Also copies the primary prefix. cty.dat is MIT (country-files.com/copyright), notice in LICENSES/cty-dat-MIT.txt.

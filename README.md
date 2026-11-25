@@ -63,7 +63,8 @@ GitHub's runners and serves them from GitHub Pages. Your Wavelog must be reachab
 2. *Settings > Secrets and variables > Actions*:
    - **Secret** `WAVELOG_API_KEY`: a read-only v1 key (Wavelog: your callsign menu > *API Keys*).
    - **Variables** `WAVELOG_URL` (e.g. `https://log.example.com`) and `CALLSIGN`. Optional:
-     `WAVELOG_STATION_ID` (default `all`) and `FLAGMAP_ARGS` (extra flags, e.g. `--theme dark`).
+     `WAVELOG_STATION_ID` (default `all`) and `FLAGMAP_ARGS` (extra flags, e.g. `--map-view full --theme dark`;
+     see `wavelog-flagmap --help`).
 3. *Settings > Pages > Build and deployment > Source*: **GitHub Actions**.
 4. In the repository's top **Actions** tab (not *Settings > Actions*): *publish > Run workflow* once to
    publish right away. The run can take a minute to appear in the list.
@@ -114,7 +115,8 @@ See [`examples/config.example.yaml`](examples/config.example.yaml). Common optio
 | `confirmed_by` | QSL sources that count as confirmed: `lotw`, `qsl`, `eqsl`, `qrz`, `clublog`, `dcl` (default `lotw,qsl`, as ARRL DXCC and Wavelog's DXCC page) |
 | `theme` | `light` or `dark` |
 | `grid.rows`, `grid.max_entries`, `grid.labels` | entries per column, total shown, and `prefix`/`none` under each count |
-| `map.width`, `map.flag_w`, `map.flag_h` | map image size and flag size |
+| `map.view` | `cropped` (default: drops the empty polar strips so flags can be bigger; Svalbard, Franz Josef Land and Antarctic entities are pinned to the edge) or `full` (84°N to 58°S) |
+| `map.width`, `map.flag_w`, `map.flag_h` | map image size and flag size (defaults 1600, 36x27: sized to look right when a QRZ bio shows the map at ~800 px) |
 
 ## Limitations
 

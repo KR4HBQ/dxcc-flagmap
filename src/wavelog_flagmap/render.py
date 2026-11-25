@@ -24,12 +24,17 @@ class GridOptions:
     rows: int = 8            # entries per column (Flag Counter uses 8)
     max_entries: int = 48
     theme: str = "light"
-    flag_w: int = 40
-    flag_h: int = 30
+    flag_w: int = 44
+    flag_h: int = 33
     scale: int = 2           # supersampling factor for crisp text on high-dpi pages
     labels: str = "prefix"   # text under each count: "prefix" (K, VE, DL...) | "none"
     footer: bool = True
     footer_text: str | None = None
+
+
+# Latitude ranges (top, bottom). "cropped" drops the empty polar strips so flags can be larger;
+# entities beyond it (Svalbard, Franz Josef Land, Antarctica...) are pinned to the edge.
+MAP_VIEWS = {"cropped": (78.0, -56.0), "full": (84.0, -58.0)}
 
 
 @dataclass
@@ -37,10 +42,11 @@ class MapOptions:
     title: str = ""
     width: int = 1600
     theme: str = "light"
-    flag_w: int = 30
-    flag_h: int = 22
-    lat_top: float = 84.0
-    lat_bottom: float = -58.0
+    flag_w: int = 36         # sized for a 1600 px map shown at ~800 px in a QRZ bio
+    flag_h: int = 27
+    view: str = "cropped"    # see MAP_VIEWS
+    lat_top: float | None = None     # override the view's range
+    lat_bottom: float | None = None
     max_flags: int = 400
     footer: bool = True
     footer_text: str | None = None
@@ -82,19 +88,19 @@ def render_grid(rows: list[EntityCount], opt: GridOptions = GridOptions()) -> Im
     cols = max(1, math.ceil(len(shown) / opt.rows))
     nrows = min(opt.rows, max(1, len(shown)))
 
-    pad, gap_x, gap_y = 10 * s, 26 * s, 6 * s
+    pad, gap_x, gap_y = 10 * s, 24 * s, 8 * s
     fw, fh = opt.flag_w * s, opt.flag_h * s
     labels = opt.labels == "prefix"
     f_title = _font(24 * s, True)
-    f_num = _font((15 if labels else 17) * s, labels)
-    f_lab = _font(11 * s)
-    f_small = _font(11 * s)
+    f_num = _font((17 if labels else 19) * s, labels)
+    f_lab = _font(13 * s)
+    f_small = _font(13 * s)
     digits = max((len(f"{r.value(opt.metric):,}") for r in shown), default=1)
     lab_chars = max((len(r.entity.prefix) for r in shown), default=1) if labels else 0
-    num_w = max(int(digits * 10.5 * s), int(lab_chars * 7.5 * s)) + 6 * s
+    num_w = max(int(digits * 11.5 * s), int(lab_chars * 9 * s)) + 6 * s
     cell_w = fw + 8 * s + num_w
-    title_h = 38 * s
-    foot_h = 22 * s if opt.footer else 0
+    title_h = 40 * s
+    foot_h = 24 * s if opt.footer else 0
     w = pad * 2 + cols * cell_w + (cols - 1) * gap_x
     h = pad * 2 + title_h + nrows * fh + (nrows - 1) * gap_y + foot_h
 
@@ -127,7 +133,7 @@ def _project(lon: float, lat: float, w: int, top: float, bottom: float, h: int) 
 
 
 def _spread(points: list[list[float]], box_w: float, box_h: float, iters: int = 300,
-            pull: float = 0.03) -> list[list[float]]:
+            pull: float = 0.03, bounds: tuple[float, float] | None = None) -> list[list[float]]:
     """Separate flag boxes in crowded regions (Europe, Caribbean).
 
     Overlapping boxes are pushed apart along the axis where they overlap least (so flags
@@ -139,6 +145,10 @@ def _spread(points: list[list[float]], box_w: float, box_h: float, iters: int = 
     n = len(pos)
     for it in range(iters):
         moved = False
+        if bounds:  # keep every flag fully inside the image, so edge crowds spread inward
+            for p in pos:
+                p[0] = min(max(p[0], box_w / 2), bounds[0] - box_w / 2)
+                p[1] = min(max(p[1], box_h / 2), bounds[1] - box_h / 2)
         for i in range(n):
             for j in range(i + 1, n):
                 dx, dy = pos[j][0] - pos[i][0], pos[j][1] - pos[i][1]
@@ -167,20 +177,24 @@ def _spread(points: list[list[float]], box_w: float, box_h: float, iters: int = 
 
 def render_map(rows: list[EntityCount], opt: MapOptions = MapOptions()) -> Image.Image:
     th = THEMES[opt.theme]
+    if opt.view not in MAP_VIEWS:
+        raise ValueError(f"map view must be one of {', '.join(MAP_VIEWS)}")
+    top = opt.lat_top if opt.lat_top is not None else MAP_VIEWS[opt.view][0]
+    bottom = opt.lat_bottom if opt.lat_bottom is not None else MAP_VIEWS[opt.view][1]
     w = opt.width
-    h = int(w * (opt.lat_top - opt.lat_bottom) / 360.0)
+    h = int(w * (top - bottom) / 360.0)
     s = 2  # supersample
     img = Image.new("RGB", (w * s, h * s), th["ocean"])
     d = ImageDraw.Draw(img)
     for poly in data.land_polygons():
-        pts = [_project(x, y, w * s, opt.lat_top, opt.lat_bottom, h * s) for x, y in poly]
+        pts = [_project(x, y, w * s, top, bottom, h * s) for x, y in poly]
         d.polygon(pts, fill=th["land"], outline=th["border"])
     img = img.resize((w, h), Image.LANCZOS)
     d = ImageDraw.Draw(img)
 
     shown = rows[: opt.max_flags]
-    anchors = [list(_project(r.entity.lon, r.entity.lat, w, opt.lat_top, opt.lat_bottom, h)) for r in shown]
-    placed = _spread(anchors, opt.flag_w + 2, opt.flag_h + 2)
+    anchors = [list(_project(r.entity.lon, r.entity.lat, w, top, bottom, h)) for r in shown]
+    placed = _spread(anchors, opt.flag_w + 2, opt.flag_h + 2, bounds=(w, h))
     for a, p in zip(anchors, placed):  # leader lines first, flags on top
         if math.hypot(a[0] - p[0], a[1] - p[1]) > opt.flag_h * 0.6:
             d.line([tuple(a), tuple(p)], fill=th["line"], width=1)
@@ -195,6 +209,11 @@ def render_map(rows: list[EntityCount], opt: MapOptions = MapOptions()) -> Image
 
     if opt.title:
         d.text((12, 8), opt.title, font=_font(26, True), fill=th["fg"])
-    if opt.footer:
-        d.text((12, h - 8), opt.footer_text or _summary(rows), font=_font(14), fill=th["fg"], anchor="ld")
+    if opt.footer:  # own strip under the map, so it never covers flags pinned to the bottom edge
+        fs = max(14, w // 80)
+        strip = Image.new("RGB", (w, h + fs + 12), th["bg"])
+        strip.paste(img, (0, 0))
+        ImageDraw.Draw(strip).text((12, h + 6), opt.footer_text or _summary(rows), font=_font(fs),
+                                   fill=th["fg"], anchor="lt")
+        img = strip
     return img

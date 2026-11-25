@@ -51,9 +51,9 @@ def test_render_smoke():
     counts, _ = stats.count_entities(parse_adif(SAMPLE.read_text()))
     rows = stats.ranked(counts)
     g = render_grid(rows, GridOptions(title="T"))
-    m = render_map(rows, MapOptions(width=800))
+    m = render_map(rows, MapOptions(width=800, footer=False))
     assert g.width > 200 and g.height > 100
-    assert m.size == (800, 315)
+    assert m.size == (800, int(800 * (78 + 56) / 360))
 
 
 def test_cli_end_to_end(tmp_path):
@@ -207,3 +207,16 @@ def test_confirmed_by_sources_and_summary():
     assert stats.summary(counts) == "3 worked / 3 confirmed / 3 QSOs"
     with pytest.raises(ValueError):
         stats.count_entities(parse_adif(adif), ["bogus"])
+
+
+def test_map_views_and_edge_entities_stay_inside():
+    counts, _ = stats.count_entities(parse_adif(
+        "<dxcc:2>61<eor><dxcc:2>13<eor><dxcc:3>237<eor><dxcc:3>259<eor>"))  # FJL, Antarctica, OX, JW
+    rows = stats.ranked(counts)
+    assert render_map(rows, MapOptions(width=800, view="full", footer=False)).size == (800, int(800 * 142 / 360))
+    assert render_map(rows, MapOptions(width=800, footer=False)).size == (800, int(800 * 134 / 360))
+
+
+def test_cli_map_view_and_grid_labels(tmp_path):
+    rc = cli.main(["--adif", str(SAMPLE), "-o", str(tmp_path), "--map-view", "full", "--grid-labels", "none"])
+    assert rc == 0

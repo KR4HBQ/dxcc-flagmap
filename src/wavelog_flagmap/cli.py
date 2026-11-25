@@ -9,7 +9,7 @@ from pathlib import Path
 
 from . import __version__, config as cfgmod, wavelog
 from .adif import parse_adif
-from .render import GridOptions, MapOptions, render_grid, render_map
+from .render import MAP_VIEWS, GridOptions, MapOptions, render_grid, render_map
 from .stats import CONFIRM_FIELDS, METRICS, count_entities, ranked, summary
 
 
@@ -51,6 +51,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--confirmed-by", metavar="SOURCES",
                    help=f"confirmation sources that count, comma separated ({','.join(CONFIRM_FIELDS)}); "
                         "default lotw,qsl")
+    p.add_argument("--map-view", choices=tuple(MAP_VIEWS),
+                   help="cropped (default: no polar strips, bigger flags) or full (84N to 58S)")
+    p.add_argument("--grid-labels", choices=("prefix", "none"), help="text under each grid count")
     p.add_argument("--theme", choices=("light", "dark"))
     p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     return p
@@ -77,6 +80,10 @@ def main(argv: list[str] | None = None) -> int:
         cfg.metric = args.metric
     if args.confirmed_by:
         cfg.confirmed_by = cfgmod._list(args.confirmed_by)
+    if args.map_view:
+        cfg.map["view"] = args.map_view
+    if args.grid_labels:
+        cfg.grid["labels"] = args.grid_labels
     if args.theme:
         cfg.theme = args.theme
 

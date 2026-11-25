@@ -27,6 +27,7 @@ grid:
   labels: prefix            # prefix under each count (K, VE, DL...) | none
   # title: "My DX"
 map:
+  view: cropped             # cropped (bigger flags, polar entities pinned to the edge) | full
   width: 1600
-  # flag_w: 30
-  # flag_h: 22
+  # flag_w: 36
+  # flag_h: 27
