@@ -27,7 +27,7 @@ Owner: Neal (KR4HBQ). Intended audience: any Wavelog user, so nothing may be har
    spreading, `confirmed_by` (default lotw,qsl = Wavelog DXCC page default; 124 worked / 96 confirmed matched Wavelog exactly). Still to check: QRZ embed size.
 3. Entity coordinates now come from AD1C cty.dat (`scripts/apply_cty.py <cty.dat>` after build_data.py; matches by
    name, ALIASES prefix table, then prefix; KEEP = Canada/Antarctica stay on Natural Earth points). cty.dat is not bundled.
-   Re-run when cty.dat adds entities. Also copies the primary prefix. Ask AD1C before 1.0 (no license stated).
+   Re-run when cty.dat adds entities. Also copies the primary prefix. cty.dat is MIT (country-files.com/copyright), notice in LICENSES/cty-dat-MIT.txt.
 4. Some entities have no flag (`zz`): grey placeholder. Consider special icons (UN, SMOM, ITU).
 5. Hosting: `.github/workflows/publish.yml` (nightly, GitHub Pages, config only via repo vars/secret, skipped when
    `vars.WAVELOG_URL` is unset; keepalive re-enables itself against the 60-day schedule shutoff - unverified).
