@@ -20,6 +20,8 @@ from typing import Iterator
 
 import requests
 
+from .net import HEADERS
+
 TIMEOUT = 60
 
 
@@ -58,7 +60,10 @@ def station_ids_v1(url: str, key: str) -> list[str]:
     logbook when the user enabled "active logbook only" in their station settings.
     """
     endpoint = f"{_base(url)}/index.php/api/station_info/"
-    resp = requests.get(endpoint + requests.utils.quote(key, safe=""), timeout=TIMEOUT)
+    try:  # the key is part of this URL, so the exception text (which quotes it) is not shown
+        resp = requests.get(endpoint + requests.utils.quote(key, safe=""), headers=HEADERS, timeout=TIMEOUT)
+    except requests.RequestException as exc:
+        raise WavelogError(f"could not reach {endpoint}: {type(exc).__name__}") from None
     try:
         body = resp.json()
     except ValueError:
@@ -81,7 +86,7 @@ def fetch_v1(url: str, key: str, station_id: int | str | list, *, max_pages: int
     last_id = 0
     for _ in range(max_pages):
         resp = requests.post(endpoint, json={"key": key, "station_id": station,
-                                             "fetchfromid": last_id}, timeout=TIMEOUT)
+                                             "fetchfromid": last_id}, headers=HEADERS, timeout=TIMEOUT)
         body = _json(resp, endpoint)
         if body.get("status") not in (None, "successful"):
             raise WavelogError(f"Wavelog reported failure: {body.get('reason') or body}")
@@ -98,7 +103,7 @@ def fetch_v2(url: str, token: str, station_id: int | str | list | None = None, *
              per_page: int = 5000, max_pages: int = 1000) -> Iterator[str]:
     """Yield ADIF text chunks using the v2 API (bearer token, scope ``qso:read``)."""
     endpoint = f"{_base(url)}/index.php/api/v2/qso"
-    headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
+    headers = {**HEADERS, "Authorization": f"Bearer {token}", "Accept": "application/json"}
     since_id = 0
     for _ in range(max_pages):
         params = {"format": "adif", "since_id": since_id, "per_page": per_page}

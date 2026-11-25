@@ -1,7 +1,7 @@
 # wavelog-flagmap
 
 Flag Counter-style images of the DXCC entities you've worked, generated from your
-[Wavelog](https://github.com/wavelog/wavelog) log. Built for pasting into a QRZ.com bio or a website,
+[Wavelog](https://github.com/wavelog/wavelog) log, LoTW or any logger's ADIF export. Built for pasting into a QRZ.com bio or a website,
 where JavaScript and iframes won't work: the output is plain PNG files.
 
 | Flag grid | World map |
@@ -12,8 +12,9 @@ where JavaScript and iframes won't work: the output is plain PNG files.
 
 ## Features
 
-- Reads your log from the **Wavelog API** (no database access needed) or from an **ADIF file exported by any
-  logger** (Log4OM, N1MM+, HRD, DXKeeper, Cloudlog, QRZ Logbook, Club Log, LoTW...).
+- Reads your log from the **Wavelog API** (no database access needed), straight from **LoTW**, or from an
+  **ADIF file exported by any logger** (Log4OM, N1MM+, HRD, DXKeeper, Cloudlog, QRZ Logbook, Club Log...),
+  either a local file or a public URL.
 - Counts QSOs **or confirmed QSOs** (LoTW / QSL / eQSL / QRZ / Club Log, your choice) per DXCC entity.
 - Real DXCC entities, not just countries: Alaska, Hawaii, Scotland, the Canary Islands and so on.
   QSOs without a DXCC field are placed from the callsign (AD1C cty.dat prefixes and exception list).
@@ -31,11 +32,22 @@ Python 3.10+. Or use the included `Dockerfile`.
 
 ## Quick start
 
-From an exported ADIF:
+From an exported ADIF (any logger), a local file or a public URL:
 
 ```bash
 wavelog-flagmap --adif my-log.adi --callsign N0CALL -o ./out
+wavelog-flagmap --adif https://example.org/my-log.adi --callsign N0CALL -o ./out
 ```
+
+From ARRL Logbook of The World:
+
+```bash
+export LOTW_USERNAME=n0call LOTW_PASSWORD=...
+wavelog-flagmap --source lotw --callsign N0CALL -o ./out
+```
+
+LoTW returns every QSO you uploaded, so "confirmed" means confirmed in LoTW (paper QSLs are not
+known to LoTW). If your account has several callsigns, `--lotw-owncall N0CALL` keeps one.
 
 From your Wavelog instance:
 
@@ -59,14 +71,21 @@ wavelog-flagmap --url https://log.example.com --callsign N0CALL -o ./out
 ## Publish nightly with GitHub Pages (no server needed)
 
 The included [`publish` workflow](.github/workflows/publish.yml) renders your images every night on
-GitHub's runners and serves them from GitHub Pages. Your Wavelog must be reachable from the internet.
+GitHub's runners and serves them from GitHub Pages. It reads Wavelog, LoTW or an ADIF file at a URL
+(a Wavelog instance must be reachable from the internet).
 
 1. Fork this repository (or copy `.github/workflows/publish.yml` and `scripts/site_index.py` into your own).
-2. *Settings > Secrets and variables > Actions*:
-   - **Secret** `WAVELOG_API_KEY`: a read-only v1 key (Wavelog: your callsign menu > *API Keys*).
-   - **Variables** `WAVELOG_URL` (e.g. `https://log.example.com`) and `CALLSIGN`. Optional:
-     `WAVELOG_STATION_ID` (default `all`) and `FLAGMAP_ARGS` (extra flags, e.g. `--map-view full --theme dark`;
-     see `wavelog-flagmap --help`).
+2. *Settings > Secrets and variables > Actions*: the **variable** `CALLSIGN`, optionally `FLAGMAP_ARGS`
+   (extra flags, e.g. `--map-view full --theme dark`; see `wavelog-flagmap --help`), and one source:
+   - **Wavelog**: variable `WAVELOG_URL` (e.g. `https://log.example.com`), secret `WAVELOG_API_KEY`
+     (a read-only v1 key; Wavelog: your callsign menu > *API Keys*), optional variable `WAVELOG_STATION_ID`
+     (default `all`).
+   - **LoTW**: variable `LOTW_USERNAME`, secret `LOTW_PASSWORD`.
+   - **ADIF URL**: variable `ADIF_URL`, a public link to an ADIF export from any logger (re-export it when
+     you want the images to catch up).
+
+   With more than one configured, Wavelog wins over LoTW over the ADIF URL; the variable
+   `FLAGMAP_SOURCE` (`wavelog`, `lotw` or `adif`) picks one explicitly.
 3. *Settings > Pages > Build and deployment > Source*: **GitHub Actions**.
 4. In the repository's top **Actions** tab (not *Settings > Actions*): *publish > Run workflow* once to
    publish right away. The run can take a minute to appear in the list.
@@ -125,7 +144,8 @@ See [`examples/config.example.yaml`](examples/config.example.yaml). Common optio
 - QSOs are placed by their ADIF `DXCC` field when present (Wavelog and most loggers fill it in).
   Without it, the entity comes from the callsign. That matches the logger's own assignment for about
   99.9% of QSOs; the exceptions are mostly US hams who moved but kept a KL7, KH6 or KP4 call.
-- Cloudlog has no full-log export API, so Cloudlog users export an ADIF file instead.
+- Cloudlog has no full-log export API, so Cloudlog users export an ADIF file instead. The QRZ Logbook
+  API needs a QRZ subscription to download a log, so it is not supported yet; Club Log may follow.
 
 - Map flag positions are the AD1C cty.dat reference points for each entity (one point per entity,
   so large countries show a single flag). Flags in crowded regions (Europe, Caribbean) are spread

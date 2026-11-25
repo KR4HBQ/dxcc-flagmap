@@ -17,8 +17,16 @@ wavelog:
                                       #   all (default: every location, new ones included automatically)
                                       #   | 1 | 1,3,5 | 1-12
 
+# lotw:                               # or ARRL Logbook of The World (all QSOs you uploaded;
+#   username: ${LOTW_USERNAME}        #   "confirmed" then means LoTW-confirmed only)
+#   password: ${LOTW_PASSWORD}
+#   owncall: N0CALL                   # optional: only QSOs made as this callsign
+
 # source:
-#   adif: ./my-log.adi                # or render from an exported ADIF file instead
+#   adif: ./my-log.adi                # or an ADIF export from any logger: a file path
+#   # adif: https://example.org/log.adi   # or a public URL
+#   type: lotw                        # pick explicitly if several sources are configured
+#                                     # (default: adif, else wavelog, else lotw)
 
 # --- optional tuning ---------------------------------------------------------
 grid:

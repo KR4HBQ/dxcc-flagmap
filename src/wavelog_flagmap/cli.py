@@ -7,7 +7,7 @@ import os
 import sys
 from pathlib import Path
 
-from . import __version__, config as cfgmod, wavelog
+from . import __version__, config as cfgmod, lotw, net, wavelog
 from .adif import parse_adif
 from .render import MAP_VIEWS, GridOptions, MapOptions, render_grid, render_map
 from .stats import CONFIRM_FIELDS, METRICS, count_entities, ranked, summary
@@ -19,10 +19,43 @@ def _atomic_save(img, path: Path) -> None:
     os.replace(tmp, path)  # a web server never sees a half-written file
 
 
-def _load_qsos(cfg: cfgmod.Config) -> list[dict[str, str]]:
+SOURCES = ("wavelog", "lotw", "adif")
+
+
+def _source(cfg: cfgmod.Config) -> str | None:
+    if cfg.source:
+        return cfg.source
     if cfg.adif:
-        return list(parse_adif(Path(cfg.adif).read_text(encoding="utf-8", errors="replace")))
-    if cfg.wavelog_url and cfg.wavelog_key:
+        return "adif"
+    if cfg.wavelog_url:
+        return "wavelog"
+    if cfg.lotw_username:
+        return "lotw"
+    return None
+
+
+def _load_qsos(cfg: cfgmod.Config) -> list[dict[str, str]]:
+    source = _source(cfg)
+    if source == "adif":
+        if not cfg.adif:
+            raise SystemExit("error: source adif needs an ADIF file or URL (--adif)")
+        if cfg.adif.lower().startswith(("http://", "https://")):
+            try:
+                text = net.fetch_text(cfg.adif)
+            except net.FetchError as exc:
+                raise SystemExit(f"error: {exc}")
+        else:
+            text = Path(cfg.adif).read_text(encoding="utf-8", errors="replace")
+        return list(parse_adif(text))
+    if source == "lotw":
+        if not (cfg.lotw_username and cfg.lotw_password):
+            raise SystemExit("error: LoTW needs LOTW_USERNAME and LOTW_PASSWORD (environment variables)")
+        try:
+            text = lotw.fetch(cfg.lotw_username, cfg.lotw_password, owncall=cfg.lotw_owncall)
+        except lotw.LotwError as exc:
+            raise SystemExit(f"error: {exc}")
+        return [lotw.normalize(r) for r in parse_adif(text)]
+    if source == "wavelog" and cfg.wavelog_url and cfg.wavelog_key:
         fetch = wavelog.fetch_v2 if cfg.wavelog_api == "v2" else wavelog.fetch_v1
         stations = cfg.station_ids
         if cfg.wavelog_api != "v2" and not stations:
@@ -33,15 +66,21 @@ def _load_qsos(cfg: cfgmod.Config) -> list[dict[str, str]]:
         for chunk in fetch(cfg.wavelog_url, cfg.wavelog_key, stations):
             qsos.extend(parse_adif(chunk))
         return qsos
-    raise SystemExit("error: configure either source.adif or wavelog.url + wavelog.key "
-                     "(or pass --adif FILE)")
+    if source == "wavelog":
+        raise SystemExit("error: Wavelog needs wavelog.url and the WAVELOG_API_KEY environment variable")
+    raise SystemExit("error: no data source: pass --adif FILE_OR_URL, --url WAVELOG_URL or --source lotw "
+                     "(or set them in the config file)")
 
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="wavelog-flagmap",
-                                description="Render a Flag Counter-style worked-DXCC grid and world map from Wavelog.")
+                                description="Render a Flag Counter-style worked-DXCC grid and world map from Wavelog, LoTW or ADIF.")
     p.add_argument("-c", "--config", help="YAML config file")
-    p.add_argument("--adif", help="use a local ADIF file instead of the Wavelog API")
+    p.add_argument("--source", choices=SOURCES,
+                   help="where the QSOs come from (default: --adif if given, else Wavelog, else LoTW)")
+    p.add_argument("--adif", metavar="FILE_OR_URL", help="read an ADIF file (local path or http(s) URL)")
+    p.add_argument("--lotw-owncall", metavar="CALL",
+                   help="LoTW: only QSOs made as this callsign (credentials: LOTW_USERNAME / LOTW_PASSWORD)")
     p.add_argument("--url", help="Wavelog base URL (overrides wavelog.url)")
     p.add_argument("--station-id", help="Station Location id(s), e.g. 1, 1,3, 1-12 or all (default: all)")
     p.add_argument("--api", choices=("v1", "v2"), help="Wavelog API version (default v1)")
@@ -62,8 +101,12 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     cfg = cfgmod.load(args.config)
+    if args.source:
+        cfg.source = args.source
     if args.adif:
         cfg.adif = args.adif
+    if args.lotw_owncall:
+        cfg.lotw_owncall = args.lotw_owncall
     if args.url:
         cfg.wavelog_url = args.url
     if args.station_id:

@@ -1,15 +1,17 @@
-# Nightly: fetch your log from Wavelog, render the PNGs and publish them on GitHub Pages.
+# Nightly: fetch your log (Wavelog, LoTW or an ADIF URL), render the PNGs and publish them on GitHub Pages.
 #
-# Setup (fork or copy this repository, then in its Settings):
-#   Secrets and variables > Actions > Secrets:    WAVELOG_API_KEY   (read-only v1 key)
-#   Secrets and variables > Actions > Variables:  WAVELOG_URL       e.g. https://log.example.com
-#                                                 CALLSIGN          e.g. N0CALL
-#                                                 WAVELOG_STATION_ID  optional, default "all"
-#                                                 FLAGMAP_ARGS      optional extra CLI flags,
-#                                                                   e.g. --theme dark --metric confirmed
+# Setup (fork or copy this repository, then in its Settings > Secrets and variables > Actions):
+#   Variables:  CALLSIGN            e.g. N0CALL
+#               FLAGMAP_ARGS        optional extra CLI flags, e.g. --theme dark --metric confirmed
+#   plus ONE source:
+#     Wavelog:  variable WAVELOG_URL (e.g. https://log.example.com), secret WAVELOG_API_KEY (read-only v1 key),
+#               optional variable WAVELOG_STATION_ID (default "all")
+#     LoTW:     variable LOTW_USERNAME, secret LOTW_PASSWORD
+#     ADIF URL: variable ADIF_URL, a public link to an ADIF export of any logger
+#   (set FLAGMAP_SOURCE to wavelog, lotw or adif if more than one is configured)
 #   Pages > Build and deployment > Source: GitHub Actions  (optionally a custom domain)
 # Images are then served at https://<user>.github.io/<repo>/dxcc-grid.png and dxcc-map.png.
-# The job is skipped while WAVELOG_URL is unset, so forks stay quiet until configured.
+# The job is skipped until a source is configured, so forks stay quiet.
 name: publish
 on:
   schedule:
@@ -28,7 +30,7 @@ concurrency:
 
 jobs:
   render:
-    if: vars.WAVELOG_URL != ''
+    if: vars.WAVELOG_URL != '' || vars.LOTW_USERNAME != '' || vars.ADIF_URL != ''
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -44,12 +46,25 @@ jobs:
           WAVELOG_API_KEY: ${{ secrets.WAVELOG_API_KEY }}
           WAVELOG_URL: ${{ vars.WAVELOG_URL }}
           WAVELOG_STATION_ID: ${{ vars.WAVELOG_STATION_ID || 'all' }}
+          LOTW_USERNAME: ${{ vars.LOTW_USERNAME }}
+          LOTW_PASSWORD: ${{ secrets.LOTW_PASSWORD }}
+          ADIF_URL: ${{ vars.ADIF_URL }}
+          FLAGMAP_SOURCE: ${{ vars.FLAGMAP_SOURCE }}
           CALLSIGN: ${{ vars.CALLSIGN }}
           FLAGMAP_ARGS: ${{ vars.FLAGMAP_ARGS }}
         run: |
+          src="$FLAGMAP_SOURCE"
+          if [ -z "$src" ]; then
+            if [ -n "$WAVELOG_URL" ]; then src=wavelog; elif [ -n "$LOTW_USERNAME" ]; then src=lotw; else src=adif; fi
+          fi
+          case "$src" in
+            wavelog) set -- --url "$WAVELOG_URL" --station-id "$WAVELOG_STATION_ID" ;;
+            lotw)    set -- --source lotw ;;
+            adif)    set -- --adif "$ADIF_URL" ;;
+            *) echo "unknown FLAGMAP_SOURCE '$src' (use wavelog, lotw or adif)"; exit 1 ;;
+          esac
           # FLAGMAP_ARGS is split into words on purpose
-          wavelog-flagmap --url "$WAVELOG_URL" --station-id "$WAVELOG_STATION_ID" \
-            --callsign "$CALLSIGN" -o site $FLAGMAP_ARGS
+          wavelog-flagmap "$@" --callsign "$CALLSIGN" -o site $FLAGMAP_ARGS
           python scripts/site_index.py site "$CALLSIGN"
       - uses: actions/upload-pages-artifact@v4
         with:

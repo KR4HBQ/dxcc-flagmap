@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -11,8 +12,12 @@ import yaml
 
 @dataclass
 class Config:
-    # data source: either a local ADIF file or a Wavelog instance
-    adif: str | None = None
+    # data source: "wavelog", "lotw" or "adif"; None = adif if set, else wavelog, else lotw
+    source: str | None = None
+    adif: str | None = None          # ADIF file path or http(s) URL
+    lotw_username: str | None = None
+    lotw_password: str | None = None
+    lotw_owncall: str | None = None  # only QSOs made as this callsign (default: all of the account's)
     wavelog_url: str | None = None
     wavelog_api: str = "v1"          # "v1" (api key) or "v2" (bearer token)
     wavelog_key: str | None = None
@@ -29,7 +34,8 @@ class Config:
 
 def _expand(v: Any) -> Any:
     if isinstance(v, str):
-        return os.path.expandvars(v)
+        v = os.path.expandvars(v)
+        return "" if re.search(r"\$\{\w+\}", v) else v  # unset ${VAR}: empty, not the literal text
     if isinstance(v, dict):
         return {k: _expand(x) for k, x in v.items()}
     return v
@@ -68,8 +74,14 @@ def load(path: str | Path | None) -> Config:
     if path:
         raw = _expand(yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {})
     wl = raw.get("wavelog", {}) or {}
+    src = raw.get("source", {}) or {}
+    lotw = raw.get("lotw", {}) or {}
     cfg = Config(
-        adif=(raw.get("source", {}) or {}).get("adif"),
+        source=src.get("type"),
+        adif=src.get("adif"),
+        lotw_username=lotw.get("username") or os.environ.get("LOTW_USERNAME"),
+        lotw_password=lotw.get("password") or os.environ.get("LOTW_PASSWORD"),
+        lotw_owncall=lotw.get("owncall"),
         wavelog_url=wl.get("url"),
         wavelog_api=str(wl.get("api", "v1")),
         wavelog_key=wl.get("key") or os.environ.get("WAVELOG_API_KEY"),

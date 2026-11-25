@@ -6,14 +6,19 @@ Owner: Neal (KR4HBQ). Intended audience: any Wavelog user, so nothing may be har
 
 ## Decisions already made
 - MIT license. Python >= 3.10 (3.9 is EOL and gone from GitHub runners), Pillow for rendering, no heavy deps.
-- Wavelog API is the default source (portable, no DB access). ADIF file is the alternative.
+- Sources: Wavelog API (default, no DB access), LoTW (`--source lotw`, LOTW_USERNAME/LOTW_PASSWORD env), ADIF file
+  or URL (`--adif`, any logger). Auto order: adif, wavelog, lotw. Every request sends net.USER_AGENT.
+  Credentials that sit in a URL (LoTW password, Wavelog station_info key) must never reach error messages.
+- Not supported: Cloudlog (no export API), QRZ Logbook (FETCH needs a paid subscription; needs a non-generic
+  User-Agent). Club Log has a REST `POST /api/v1/logs/{call}/adif-export` (Bearer token) - candidate.
 - QRZ bios allow basic HTML + external images, not JS/iframes -> output is static PNG with stable filenames,
   regenerated on a schedule and hosted somewhere public.
 - Offline rendering: flags (flag-icons, MIT), land polygons (Natural Earth), DXCC list (k0swe/dxcc-json) and entity coordinates (from AD1C cty.dat) are bundled.
 - Secrets only via env vars (`${VAR}` expansion in config); never commit keys or callsign-specific config.
 
 ## Layout
-- `src/wavelog_flagmap/` adif.py (parser), wavelog.py (API v1/v2 client), stats.py, render.py (grid + map), config.py, cli.py
+- `src/wavelog_flagmap/` adif.py (parser), wavelog.py (API v1/v2 client), lotw.py (LoTW lotwreport.adi), net.py
+  (User-Agent, ADIF-from-URL), stats.py, render.py (grid + map), config.py, cli.py
 - `src/wavelog_flagmap/data/` generated data; rebuild with `scripts/build_data.py` (needs cairosvg, flag-icons npm package, Natural Earth GeoJSON)
 - `examples/` config + synthetic sample ADIF (`make_sample.py`); `docs/` README images
 

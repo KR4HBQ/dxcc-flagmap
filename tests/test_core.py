@@ -1,7 +1,9 @@
 import json
 from pathlib import Path
 
-from wavelog_flagmap import cli, config, data, stats, wavelog
+import pytest
+
+from wavelog_flagmap import cli, config, data, lotw, net, stats, wavelog
 from wavelog_flagmap.adif import parse_adif
 from wavelog_flagmap.render import GridOptions, MapOptions, render_grid, render_map
 
@@ -94,7 +96,7 @@ def test_fetch_v1_pages_until_no_new_ids(monkeypatch):
     pages = [{"adif": "<call:1>A<eor>", "lastfetchedid": 10}, {"adif": "<call:1>B<eor>", "lastfetchedid": 20},
              {"adif": "", "lastfetchedid": 20}]
 
-    def fake_post(url, json, timeout):
+    def fake_post(url, json, timeout, headers=None):
         calls.append((url, json["fetchfromid"]))
         return R(pages[len(calls) - 1])
 
@@ -119,14 +121,14 @@ def test_fetch_v1_null_adif_when_nothing_new(monkeypatch):
     # Shape returned by Wavelog's Api::get_contacts_adif when no rows match
     body = {"status": "successful", "message": "No new QSOs available.", "lastfetchedid": 0,
             "exported_qsos": 0, "adif": None}
-    monkeypatch.setattr(wavelog.requests, "post", lambda url, json, timeout: _Resp(body))
+    monkeypatch.setattr(wavelog.requests, "post", lambda url, json, timeout, headers=None: _Resp(body))
     assert list(wavelog.fetch_v1("https://wl.example", "k", 1)) == []
 
 
 def test_fetch_v1_error_reason_is_reported(monkeypatch):
     import pytest
     body = {"status": "failed", "reason": "Station ID not accessible for this API key"}
-    monkeypatch.setattr(wavelog.requests, "post", lambda url, json, timeout: _Resp(body, 401))
+    monkeypatch.setattr(wavelog.requests, "post", lambda url, json, timeout, headers=None: _Resp(body, 401))
     with pytest.raises(wavelog.WavelogError, match="401.*Station ID not accessible"):
         list(wavelog.fetch_v1("https://wl.example", "k", 99))
 
@@ -172,7 +174,7 @@ def test_fetch_v1_sends_station_list_as_array(monkeypatch):
     sent = []
     body = {"status": "successful", "lastfetchedid": 0, "exported_qsos": 0, "adif": None}
 
-    def fake_post(url, json, timeout):
+    def fake_post(url, json, timeout, headers=None):
         sent.append(json["station_id"])
         return _Resp(body)
 
@@ -185,11 +187,11 @@ def test_fetch_v1_sends_station_list_as_array(monkeypatch):
 def test_station_all_lists_locations_then_fetches_them(monkeypatch):
     got = {}
 
-    def fake_get(url, timeout):
+    def fake_get(url, timeout, headers=None):
         got["url"] = url
         return _Resp([{"station_id": "1", "station_callsign": "N0CALL"}, {"station_id": "7"}])
 
-    def fake_post(url, json, timeout):
+    def fake_post(url, json, timeout, headers=None):
         got["station"] = json["station_id"]
         return _Resp({"status": "successful", "lastfetchedid": 0, "adif": None})
 
@@ -245,3 +247,85 @@ def test_count_entities_respects_explicit_dxcc_zero_and_country_last():
             "<call:4>Q1ZZ<country:7>Germany<eor>")                # unknown call, country name wins
     counts, skipped = stats.count_entities(parse_adif(adif))
     assert skipped == 1 and list(counts) == [230]
+
+
+class _Raw:
+    def __init__(self, text, status_code=200):
+        self.content, self.status_code = text.encode("utf-8"), status_code
+
+
+LOTW_REPORT = ("ARRL Logbook of the World Status Report\n<PROGRAMID:4>LoTW\n<eoh>\n"
+               "<CALL:5>DL1AA<BAND:3>20M<QSL_RCVD:1>Y<QSLRDATE:10>2026-01-02<DXCC:3>230<COUNTRY:7>GERMANY<eor>\n"
+               "<CALL:4>JA1A<BAND:3>20M<QSL_RCVD:1>N<eor>\n")
+
+
+def test_lotw_fetch_all_uploads_and_normalize(monkeypatch):
+    seen = {}
+
+    def fake_get(url, params, headers, timeout):
+        seen.update(params=params, headers=headers)
+        return _Raw(LOTW_REPORT)
+
+    monkeypatch.setattr(lotw.requests, "get", fake_get)
+    recs = [lotw.normalize(r) for r in parse_adif(lotw.fetch("n0call", "pw", owncall="N0CALL"))]
+    assert seen["params"]["qso_qsl"] == "no" and seen["params"]["qso_query"] == "1"
+    assert seen["params"]["qso_owncall"] == "N0CALL"
+    assert seen["headers"]["User-Agent"].startswith("wavelog-flagmap/")
+    assert recs[0]["lotw_qsl_rcvd"] == "Y" and "qsl_rcvd" not in recs[0]  # LoTW, not a paper card
+    counts, skipped = stats.count_entities(recs)                    # JA1A: no DXCC field -> callsign
+    assert skipped == 0 and counts[230].confirmed == 1 and counts[339].confirmed == 0
+    counts, _ = stats.count_entities(recs, ["qsl"])
+    assert counts[230].confirmed == 0
+
+
+def test_lotw_login_failure_never_shows_the_password(monkeypatch):
+    monkeypatch.setattr(lotw.requests, "get", lambda *a, **k: _Raw("<html>Username/password incorrect</html>"))
+    with pytest.raises(lotw.LotwError) as e:
+        lotw.fetch("n0call", "hunter2")
+    assert "password" in str(e.value) and "hunter2" not in str(e.value)
+
+    def boom(*a, **k):
+        raise lotw.requests.ConnectionError("https://lotw.arrl.org/...?password=hunter2")
+    monkeypatch.setattr(lotw.requests, "get", boom)
+    with pytest.raises(lotw.LotwError) as e:
+        lotw.fetch("n0call", "hunter2")
+    assert "hunter2" not in str(e.value)
+
+
+def test_station_info_error_never_shows_the_key(monkeypatch):
+    def boom(*a, **k):
+        raise wavelog.requests.ConnectionError("https://wl.example/index.php/api/station_info/sekret")
+    monkeypatch.setattr(wavelog.requests, "get", boom)
+    with pytest.raises(wavelog.WavelogError) as e:
+        wavelog.station_ids_v1("https://wl.example", "sekret")
+    assert "sekret" not in str(e.value)
+
+
+def test_cli_adif_from_url_and_source_selection(tmp_path, monkeypatch):
+    seen = []
+
+    def fake_get(url, headers, timeout):
+        seen.append(url)
+        return _Raw(SAMPLE.read_text(encoding="utf-8"))
+
+    monkeypatch.setattr(net.requests, "get", fake_get)
+    assert cli.main(["--adif", "https://example.org/log.adi", "-o", str(tmp_path)]) == 0
+    assert seen == ["https://example.org/log.adi"]
+    c = config.Config(adif="x.adi", wavelog_url="https://wl", lotw_username="u")
+    assert cli._source(c) == "adif"
+    c.adif = None
+    assert cli._source(c) == "wavelog"
+    c.wavelog_url = None
+    assert cli._source(c) == "lotw"
+    c.source = "wavelog"
+    with pytest.raises(SystemExit):
+        cli._load_qsos(c)
+
+
+def test_config_unset_env_var_is_empty(tmp_path, monkeypatch):
+    monkeypatch.delenv("LOTW_PASSWORD", raising=False)
+    monkeypatch.delenv("LOTW_USERNAME", raising=False)
+    p = tmp_path / "c.yaml"
+    p.write_text("lotw:\n  username: ${LOTW_USERNAME}\n  password: ${LOTW_PASSWORD}\n")
+    cfg = config.load(p)
+    assert not cfg.lotw_username and not cfg.lotw_password and cli._source(cfg) is None
