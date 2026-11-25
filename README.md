@@ -124,7 +124,12 @@ QRZ bios accept basic HTML and externally hosted images. Add to your bio:
 ```html
 <a href="https://<user>.github.io/<repo>/"><img src="https://<user>.github.io/<repo>/dxcc-grid.png" alt="Worked DXCC" style="max-width:100%;height:auto"></a>
 <img src="https://<user>.github.io/<repo>/dxcc-map.png" alt="DXCC map" style="width:100%;height:auto">
+<p><a href="https://github.com/KR4HBQ/wavelog-flagmap">Get your own DXCC flag map</a></p>
 ```
+
+Both images carry a small "Get your own: github.com/KR4HBQ/wavelog-flagmap" line in the footer; text in an
+image can't be clicked, so the last line above adds a real link (optional). `--no-credit` removes the line
+from the images.
 
 The filenames never change, so the bio never needs editing again. QRZ and browsers may cache images
 for a while (GitHub Pages: about 10 minutes).

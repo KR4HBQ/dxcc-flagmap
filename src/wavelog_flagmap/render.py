@@ -17,6 +17,10 @@ THEMES = {
 }
 
 
+# Small "get your own" line in the footer (turn off with credit=False / --no-credit).
+CREDIT = "Get your own: github.com/KR4HBQ/wavelog-flagmap"
+
+
 @dataclass
 class GridOptions:
     title: str = "Worked DXCC"
@@ -30,6 +34,7 @@ class GridOptions:
     labels: str = "prefix"   # text under each count: "prefix" (K, VE, DL...) | "none"
     footer: bool = True
     footer_text: str | None = None
+    credit: bool = True
 
 
 # Latitude ranges (top, bottom). "cropped" drops the empty polar strips so flags can be larger;
@@ -50,6 +55,7 @@ class MapOptions:
     max_flags: int = 400
     footer: bool = True
     footer_text: str | None = None
+    credit: bool = True
     extra: dict = field(default_factory=dict)
 
 
@@ -100,8 +106,11 @@ def render_grid(rows: list[EntityCount], opt: GridOptions = GridOptions()) -> Im
     num_w = max(int(digits * 11.5 * s), int(lab_chars * 9 * s)) + 6 * s
     cell_w = fw + 8 * s + num_w
     title_h = 40 * s
-    foot_h = 24 * s if opt.footer else 0
+    credit = opt.footer and opt.credit
+    foot_h = (24 * s if opt.footer else 0) + (18 * s if credit else 0)
     w = pad * 2 + cols * cell_w + (cols - 1) * gap_x
+    if credit:
+        w = max(w, pad * 2 + int(f_small.getlength(CREDIT)))
     h = pad * 2 + title_h + nrows * fh + (nrows - 1) * gap_y + foot_h
 
     img = Image.new("RGB", (max(w, 260 * s), h), th["bg"])
@@ -123,7 +132,9 @@ def render_grid(rows: list[EntityCount], opt: GridOptions = GridOptions()) -> Im
         label = opt.footer_text or _summary(rows)
         if opt.metric == "confirmed":
             label += " - ranked by confirmed QSOs"
-        d.text((pad, h - pad), label, font=f_small, fill=th["fg"], anchor="ld")
+        d.text((pad, h - pad - (18 * s if credit else 0)), label, font=f_small, fill=th["fg"], anchor="ld")
+        if credit:
+            d.text((pad, h - pad), CREDIT, font=f_small, fill=th["muted"], anchor="ld")
     return img.resize((img.width // s, img.height // s), Image.LANCZOS) if s > 1 else img
 
 
@@ -213,7 +224,9 @@ def render_map(rows: list[EntityCount], opt: MapOptions = MapOptions()) -> Image
         fs = max(14, w // 80)
         strip = Image.new("RGB", (w, h + fs + 12), th["bg"])
         strip.paste(img, (0, 0))
-        ImageDraw.Draw(strip).text((12, h + 6), opt.footer_text or _summary(rows), font=_font(fs),
-                                   fill=th["fg"], anchor="lt")
+        sd = ImageDraw.Draw(strip)
+        sd.text((12, h + 6), opt.footer_text or _summary(rows), font=_font(fs), fill=th["fg"], anchor="lt")
+        if opt.credit:
+            sd.text((w - 12, h + 6), CREDIT, font=_font(fs), fill=th["muted"], anchor="rt")
         img = strip
     return img

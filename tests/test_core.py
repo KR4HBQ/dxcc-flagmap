@@ -225,6 +225,14 @@ def test_map_views_and_edge_entities_stay_inside():
     assert render_map(rows, MapOptions(width=800, footer=False)).size == (800, int(800 * 134 / 360))
 
 
+def test_credit_line_is_optional():
+    counts, _ = stats.count_entities(parse_adif("<dxcc:3>291<eor>"))
+    rows = stats.ranked(counts)
+    with_credit, without = render_grid(rows), render_grid(rows, GridOptions(credit=False))
+    assert with_credit.height > without.height and with_credit.width >= without.width
+    assert render_map(rows, MapOptions(width=800, credit=False)).size == render_map(rows, MapOptions(width=800)).size
+
+
 def test_cli_map_view_and_grid_labels(tmp_path):
     rc = cli.main(["--adif", str(SAMPLE), "-o", str(tmp_path), "--map-view", "full", "--grid-labels", "none"])
     assert rc == 0

@@ -119,6 +119,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="cropped (default: no polar strips, bigger flags) or full (84N to 58S)")
     p.add_argument("--grid-labels", choices=("prefix", "none"), help="text under each grid count")
     p.add_argument("--theme", choices=("light", "dark"))
+    p.add_argument("--no-credit", action="store_true",
+                   help='leave out the "Get your own: github.com/..." line in the footers')
     p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     return p
 
@@ -154,6 +156,8 @@ def main(argv: list[str] | None = None) -> int:
         cfg.grid["labels"] = args.grid_labels
     if args.theme:
         cfg.theme = args.theme
+    if args.no_credit:
+        cfg.grid["credit"] = cfg.map["credit"] = False
 
     qsos = _load_qsos(cfg)
     try:
