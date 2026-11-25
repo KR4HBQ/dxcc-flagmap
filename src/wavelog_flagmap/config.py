@@ -12,8 +12,8 @@ import yaml
 
 @dataclass
 class Config:
-    # data source: wavelog, lotw, clublog, qrz or adif; None = the first one configured, in the order
-    # adif, wavelog, lotw, clublog, qrz
+    # data source: wavelog, lotw, clublog, qrz, wrl or adif; None = the first one configured, in the order
+    # adif, wavelog, lotw, clublog, qrz, wrl
     source: str | None = None
     adif: str | None = None          # ADIF file path or http(s) URL
     lotw_username: str | None = None
@@ -22,6 +22,7 @@ class Config:
     clublog_token: str | None = None
     clublog_callsign: str | None = None  # default: callsign
     qrz_key: str | None = None       # QRZ Logbook API access key (needs a QRZ subscription)
+    wrl_key: str | None = None       # World Radio League API key (wrl_live_...)
     wavelog_url: str | None = None
     wavelog_api: str = "v1"          # "v1" (api key) or "v2" (bearer token)
     wavelog_key: str | None = None
@@ -89,6 +90,7 @@ def load(path: str | Path | None) -> Config:
         clublog_token=(raw.get("clublog") or {}).get("token") or os.environ.get("CLUBLOG_TOKEN"),
         clublog_callsign=(raw.get("clublog") or {}).get("callsign") or os.environ.get("CLUBLOG_CALLSIGN"),
         qrz_key=(raw.get("qrz") or {}).get("key") or os.environ.get("QRZ_LOGBOOK_KEY"),
+        wrl_key=(raw.get("wrl") or {}).get("key") or os.environ.get("WRL_API_KEY"),
         wavelog_url=wl.get("url"),
         wavelog_api=str(wl.get("api", "v1")),
         wavelog_key=wl.get("key") or os.environ.get("WAVELOG_API_KEY"),

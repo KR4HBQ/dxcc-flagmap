@@ -73,11 +73,16 @@ def count_entities(qsos: Iterable[dict[str, str]], confirmed_by: Iterable[str] =
     return out, skipped
 
 
-def summary(counts: dict[int, EntityCount]) -> str:
-    """Footer line, e.g. '124 worked / 96 confirmed / 5,210 QSOs'."""
+def summary(counts: dict[int, EntityCount], *, confirmations: bool = True) -> str:
+    """Footer line, e.g. '124 worked / 96 confirmed / 5,210 QSOs'.
+
+    ``confirmations=False`` for sources that carry no QSL status (the count would always be 0).
+    """
     worked = len(counts)
     confirmed = sum(1 for c in counts.values() if c.confirmed)
     qsos = sum(c.qsos for c in counts.values())
+    if not confirmations:
+        return f"{worked} worked / {qsos:,} QSOs"
     return f"{worked} worked / {confirmed} confirmed / {qsos:,} QSOs"
 
 

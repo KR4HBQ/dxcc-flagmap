@@ -18,7 +18,11 @@ Owner: Neal (KR4HBQ). Intended audience: any Wavelog user, so nothing may be har
   to Wavelog, lotw,qsl = 96 confirmed (lotw alone 95). ADIF comes HTML-escaped (&lt;...&gt;); past the last page
   QRZ answers "COUNT=0&RESULT=FAIL" with no REASON. The export carries the logger's LOTW/QSL/eQSL fields.
   QRZ's own "confirmed" (status C) is far looser: 125/125 entities.
-- Not supported: Cloudlog (no export API).
+- World Radio League (wrl.py: JSON `GET /v1/contacts`, Bearer `wrl_live_` key, 100/page, `meta.nextCursor`
+  paging, 120 reads/min) is written from the OpenAPI spec, NOT yet verified live. Contacts carry NO confirmation
+  status, so the WRL footer omits "confirmed" and --metric confirmed is refused. isDuplicate contacts skipped.
+- Not supported: Cloudlog (no export API), Ham2K PoLo (on-device only, manual ADIF export), HamRS (sync is
+  private to its apps; users can upload to QRZ and use --source qrz).
 - QRZ bios allow basic HTML + external images, not JS/iframes -> output is static PNG with stable filenames,
   regenerated on a schedule and hosted somewhere public.
 - Offline rendering: flags (flag-icons, MIT), land polygons (Natural Earth), DXCC list (k0swe/dxcc-json) and entity coordinates (from AD1C cty.dat) are bundled.

@@ -13,7 +13,7 @@ where JavaScript and iframes won't work: the output is plain PNG files.
 ## Features
 
 - Reads your log from the **Wavelog API** (no database access needed), straight from **LoTW**, **Club Log**
-  or the **QRZ Logbook** (QRZ subscribers), or from an
+  the **QRZ Logbook** (QRZ subscribers) or **World Radio League**, or from an
   **ADIF file exported by any logger** (Log4OM, N1MM+, HRD, DXKeeper, Cloudlog, QRZ Logbook, Club Log...),
   either a local file or a public URL.
 - Counts QSOs **or confirmed QSOs** (LoTW / QSL / eQSL / QRZ / Club Log, your choice) per DXCC entity.
@@ -62,7 +62,17 @@ wavelog-flagmap --source qrz --callsign N0CALL -o ./out
 ```
 
 Club Log's export marks LoTW and card confirmations alike as `QSL_RCVD`, so the default
-`confirmed_by` (`lotw,qsl`) is right for it but LoTW alone can't be singled out. The QRZ Logbook
+`confirmed_by` (`lotw,qsl`) is right for it but LoTW alone can't be singled out. 
+
+From World Radio League (create a key under *Integrations > Developer API*):
+
+```bash
+export WRL_API_KEY=wrl_live_...
+wavelog-flagmap --source wrl --callsign N0CALL -o ./out
+```
+
+WRL's API has no QSL or LoTW status, so with WRL the images show worked entities only (the footer
+leaves out the confirmed count). The QRZ Logbook
 keeps the LoTW / QSL fields your logger uploaded, so the default works there too; `--confirmed-by qrz`
 instead counts QRZ's own confirmations, which are much looser than DXCC rules.
 
@@ -100,6 +110,7 @@ GitHub's runners and serves them from GitHub Pages. It reads Wavelog, LoTW or an
    - **LoTW**: variable `LOTW_USERNAME`, secret `LOTW_PASSWORD`.
    - **Club Log**: secret `CLUBLOG_TOKEN` and variable `FLAGMAP_SOURCE` = `clublog` (the log of `CALLSIGN`).
    - **QRZ Logbook**: secret `QRZ_LOGBOOK_KEY` and variable `FLAGMAP_SOURCE` = `qrz`.
+   - **World Radio League**: secret `WRL_API_KEY` and variable `FLAGMAP_SOURCE` = `wrl`.
    - **ADIF URL**: variable `ADIF_URL`, a public link to an ADIF export from any logger (re-export it when
      you want the images to catch up).
 

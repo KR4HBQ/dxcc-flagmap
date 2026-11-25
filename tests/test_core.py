@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from wavelog_flagmap import cli, clublog, config, data, lotw, net, qrz, stats, wavelog
+from wavelog_flagmap import cli, clublog, config, data, lotw, net, qrz, stats, wavelog, wrl
 from wavelog_flagmap.adif import parse_adif
 from wavelog_flagmap.render import GridOptions, MapOptions, render_grid, render_map
 
@@ -401,3 +401,40 @@ def test_qrz_response_parsing_and_auth_error(monkeypatch):
                         lambda *a, **k: _Http("RESULT=AUTH&REASON=invalid api key"))
     with pytest.raises(qrz.QrzError, match="subscription"):
         list(qrz.fetch("KEY"))
+
+
+def test_wrl_pages_by_cursor_and_maps_contacts(monkeypatch):
+    pages = {
+        None: {"data": [{"call": "DL1AA", "timestamp": "2026-11-20T14:05:00Z", "band": 20, "mode": "FT8",
+                         "dxcc": 230, "isDuplicate": False},
+                        {"call": "DL1AA", "timestamp": "2026-11-20T14:05:00Z", "band": 20, "dxcc": 230,
+                         "isDuplicate": True}],
+               "meta": {"count": 2, "nextCursor": "abc"}, "error": None},
+        "abc": {"data": [{"call": "JA1XYZ", "timestamp": "2026-11-19T01:00:00Z", "band": 0.7, "dxcc": None}],
+                "meta": {"count": 1, "nextCursor": None}, "error": None},
+    }
+    seen = []
+
+    def fake_get(url, params, headers, timeout):
+        seen.append((params.get("cursor"), params["limit"], headers["Authorization"]))
+        return _Http(json.dumps(pages[params.get("cursor")]))
+
+    monkeypatch.setattr(wrl.requests, "get", fake_get)
+    recs = list(wrl.fetch("wrl_live_x"))
+    assert [s[0] for s in seen] == [None, "abc"] and seen[0][1] == 100 and seen[0][2] == "Bearer wrl_live_x"
+    assert recs[0] == {"call": "DL1AA", "qso_date": "20261120", "time_on": "1405", "band": "20m",
+                       "mode": "FT8", "dxcc": "230"}
+    assert len(recs) == 2 and recs[1]["band"] == "70cm" and "dxcc" not in recs[1]   # duplicate skipped
+    counts, skipped = stats.count_entities(recs)
+    assert set(counts) == {230, 339} and skipped == 0                   # JA from the callsign
+    assert stats.summary(counts, confirmations=False) == "2 worked / 2 QSOs"
+
+
+def test_wrl_error_and_confirmed_metric(monkeypatch):
+    body = {"data": None, "meta": None, "error": {"code": "MEMBERSHIP_REQUIRED", "message": "Upgrade"}}
+    monkeypatch.setattr(wrl.requests, "get", lambda *a, **k: _Http(json.dumps(body), 403))
+    with pytest.raises(wrl.WrlError, match="MEMBERSHIP_REQUIRED"):
+        list(wrl.fetch("k"))
+    monkeypatch.setenv("WRL_API_KEY", "k")
+    with pytest.raises(SystemExit, match="no confirmation"):
+        cli.main(["--source", "wrl", "--metric", "confirmed"])

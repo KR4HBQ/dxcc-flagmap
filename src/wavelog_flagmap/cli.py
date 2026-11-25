@@ -7,7 +7,7 @@ import os
 import sys
 from pathlib import Path
 
-from . import __version__, clublog, config as cfgmod, lotw, net, qrz, wavelog
+from . import __version__, clublog, config as cfgmod, lotw, net, qrz, wavelog, wrl
 from .adif import parse_adif
 from .render import MAP_VIEWS, GridOptions, MapOptions, render_grid, render_map
 from .stats import CONFIRM_FIELDS, METRICS, count_entities, ranked, summary
@@ -19,7 +19,7 @@ def _atomic_save(img, path: Path) -> None:
     os.replace(tmp, path)  # a web server never sees a half-written file
 
 
-SOURCES = ("wavelog", "lotw", "clublog", "qrz", "adif")
+SOURCES = ("wavelog", "lotw", "clublog", "qrz", "wrl", "adif")
 
 
 def _source(cfg: cfgmod.Config) -> str | None:
@@ -35,6 +35,8 @@ def _source(cfg: cfgmod.Config) -> str | None:
         return "clublog"
     if cfg.qrz_key:
         return "qrz"
+    if cfg.wrl_key:
+        return "wrl"
     return None
 
 
@@ -76,6 +78,13 @@ def _load_qsos(cfg: cfgmod.Config) -> list[dict[str, str]]:
             return [qrz.normalize(r) for chunk in qrz.fetch(cfg.qrz_key) for r in parse_adif(chunk)]
         except qrz.QrzError as exc:
             raise SystemExit(f"error: {exc}")
+    if source == "wrl":
+        if not cfg.wrl_key:
+            raise SystemExit("error: World Radio League needs WRL_API_KEY (environment variable)")
+        try:
+            return list(wrl.fetch(cfg.wrl_key))
+        except wrl.WrlError as exc:
+            raise SystemExit(f"error: {exc}")
     if source == "wavelog" and cfg.wavelog_url and cfg.wavelog_key:
         fetch = wavelog.fetch_v2 if cfg.wavelog_api == "v2" else wavelog.fetch_v1
         stations = cfg.station_ids
@@ -90,19 +99,19 @@ def _load_qsos(cfg: cfgmod.Config) -> list[dict[str, str]]:
     if source == "wavelog":
         raise SystemExit("error: Wavelog needs wavelog.url and the WAVELOG_API_KEY environment variable")
     raise SystemExit("error: no data source: pass --adif FILE_OR_URL, --url WAVELOG_URL or --source "
-                     "lotw/clublog/qrz "
+                     "lotw/clublog/qrz/wrl "
                      "(or set them in the config file)")
 
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="wavelog-flagmap",
                                 description="Render a Flag Counter-style worked-DXCC grid and world map from Wavelog, LoTW, Club Log, "
-                                            "QRZ Logbook or ADIF.")
+                                            "QRZ Logbook, World Radio League or ADIF.")
     p.add_argument("-c", "--config", help="YAML config file")
     p.add_argument("--source", choices=SOURCES,
-                   help="where the QSOs come from (default: the first configured of adif, wavelog, lotw, clublog, qrz; "
+                   help="where the QSOs come from (default: the first configured of adif, wavelog, lotw, clublog, qrz, wrl; "
                         "credentials come from WAVELOG_API_KEY, LOTW_USERNAME/LOTW_PASSWORD, CLUBLOG_TOKEN, "
-                        "QRZ_LOGBOOK_KEY)")
+                        "QRZ_LOGBOOK_KEY, WRL_API_KEY)")
     p.add_argument("--adif", metavar="FILE_OR_URL", help="read an ADIF file (local path or http(s) URL)")
     p.add_argument("--lotw-owncall", metavar="CALL",
                    help="LoTW: only QSOs made as this callsign (credentials: LOTW_USERNAME / LOTW_PASSWORD)")
@@ -159,6 +168,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.no_credit:
         cfg.grid["credit"] = cfg.map["credit"] = False
 
+    confirmations = _source(cfg) != "wrl"  # WRL contacts carry no QSL status
+    if not confirmations and cfg.metric == "confirmed":
+        raise SystemExit("error: World Radio League has no confirmation data; use --metric qsos")
     qsos = _load_qsos(cfg)
     try:
         counts, skipped = count_entities(qsos, cfg.confirmed_by)
@@ -172,9 +184,10 @@ def main(argv: list[str] | None = None) -> int:
     out = Path(cfg.output_dir)
     out.mkdir(parents=True, exist_ok=True)
     call = cfg.callsign
+    foot = summary(counts, confirmations=confirmations)
     gopt = GridOptions(title=cfg.grid.pop("title", f"{call} Worked DXCC".strip()),
-                       metric=cfg.metric, theme=cfg.theme, footer_text=summary(counts), **cfg.grid)
-    mopt = MapOptions(title=cfg.map.pop("title", ""), theme=cfg.theme, footer_text=summary(counts), **cfg.map)
+                       metric=cfg.metric, theme=cfg.theme, footer_text=foot, **cfg.grid)
+    mopt = MapOptions(title=cfg.map.pop("title", ""), theme=cfg.theme, footer_text=foot, **cfg.map)
     _atomic_save(render_grid(rows, gopt), out / "dxcc-grid.png")
     _atomic_save(render_map(rows, mopt), out / "dxcc-map.png")
     (out / "dxcc-stats.json").write_text(json.dumps({
@@ -184,7 +197,7 @@ def main(argv: list[str] | None = None) -> int:
                       "confirmed": r.confirmed} for r in rows],
     }, indent=1))
     print(f"wrote {out}/dxcc-grid.png, dxcc-map.png, dxcc-stats.json "
-          f"({summary(counts)}; {skipped} QSOs without a DXCC entity skipped)")
+          f"({foot}; {skipped} QSOs without a DXCC entity skipped)")
     return 0
 
 
