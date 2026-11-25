@@ -19,7 +19,8 @@ Owner: Neal (KR4HBQ). Intended audience: any Wavelog user, so nothing may be har
   QRZ answers "COUNT=0&RESULT=FAIL" with no REASON. The export carries the logger's LOTW/QSL/eQSL fields.
   QRZ's own "confirmed" (status C) is far looser: 125/125 entities.
 - World Radio League (wrl.py: JSON `GET /v1/contacts`, Bearer `wrl_live_` key, 100/page, `meta.nextCursor`
-  paging, 120 reads/min) is written from the OpenAPI spec, NOT yet verified live. Contacts carry NO confirmation
+  paging, 120 reads/min) VERIFIED live 2026-11-25: 5,043 contacts in 38 s, all with dxcc, no duplicates; every
+  entity matches Wavelog except one QSO not yet uploaded to WRL. Contacts carry NO confirmation
   status, so the WRL footer omits "confirmed" and --metric confirmed is refused. isDuplicate contacts skipped.
 - Not supported: Cloudlog (no export API), Ham2K PoLo (on-device only, manual ADIF export), HamRS (sync is
   private to its apps; users can upload to QRZ and use --source qrz).
