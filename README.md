@@ -43,7 +43,15 @@ export WAVELOG_API_KEY=...                     # a read-only key (Wavelog > API 
 wavelog-flagmap -c config.yaml
 ```
 
-`station_id` is the numeric Station Location ID. Find it in Wavelog under *Station Locations*.
+`station_id` is the numeric Station Location ID from Wavelog's *Station Locations* page. If you log from several
+locations (home plus portable/POTA, for example), list them all (`1,3,5` or `1-12`) so the totals match
+Wavelog's own DXCC award page, which counts every location linked to your active logbook.
+
+Without a config file:
+
+```bash
+wavelog-flagmap --url https://log.example.com --station-id 1-12 --callsign N0CALL -o ./out
+```
 
 ## Embed in QRZ
 

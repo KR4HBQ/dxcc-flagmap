@@ -70,7 +70,7 @@ def test_config_env_expansion(tmp_path, monkeypatch):
     p = tmp_path / "c.yaml"
     p.write_text("wavelog:\n  url: https://x.example\n  key: ${MY_KEY}\n  station_id: 3\n")
     cfg = config.load(p)
-    assert cfg.wavelog_key == "sekret" and cfg.station_id == "3"
+    assert cfg.wavelog_key == "sekret" and cfg.station_ids == ["3"]
 
 
 def test_fetch_v1_pages_until_no_new_ids(monkeypatch):
@@ -153,3 +153,24 @@ def test_fetch_v2_error_envelope(monkeypatch):
     monkeypatch.setattr(wavelog.requests, "get", lambda *a, **k: _Resp(body, 401))
     with pytest.raises(wavelog.WavelogError, match="invalid_token"):
         list(wavelog.fetch_v2("https://wl.example", "bad"))
+
+
+def test_parse_station_ids_forms():
+    assert config.parse_station_ids(None) == []
+    assert config.parse_station_ids(1) == ["1"]
+    assert config.parse_station_ids("1-3, 7") == ["1", "2", "3", "7"]
+    assert config.parse_station_ids([2, "4-5", 2]) == ["2", "4", "5"]
+
+
+def test_fetch_v1_sends_station_list_as_array(monkeypatch):
+    sent = []
+    body = {"status": "successful", "lastfetchedid": 0, "exported_qsos": 0, "adif": None}
+
+    def fake_post(url, json, timeout):
+        sent.append(json["station_id"])
+        return _Resp(body)
+
+    monkeypatch.setattr(wavelog.requests, "post", fake_post)
+    list(wavelog.fetch_v1("https://wl.example", "k", ["1", "2"]))
+    list(wavelog.fetch_v1("https://wl.example", "k", ["5"]))
+    assert sent == [[1, 2], "5"]

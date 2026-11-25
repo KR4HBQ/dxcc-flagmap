@@ -52,12 +52,17 @@ def _json(resp: requests.Response, endpoint: str) -> dict:
     return body
 
 
-def fetch_v1(url: str, key: str, station_id: int | str, *, max_pages: int = 1000) -> Iterator[str]:
+def fetch_v1(url: str, key: str, station_id: int | str | list, *, max_pages: int = 1000) -> Iterator[str]:
     """Yield ADIF text chunks until the instance reports nothing new."""
     endpoint = f"{_base(url)}/index.php/api/get_contacts_adif"
+    # Wavelog accepts a single id or a JSON array of ids
+    if isinstance(station_id, (list, tuple)):
+        station: int | str | list = [int(s) for s in station_id] if len(station_id) > 1 else str(station_id[0])
+    else:
+        station = str(station_id)
     last_id = 0
     for _ in range(max_pages):
-        resp = requests.post(endpoint, json={"key": key, "station_id": str(station_id),
+        resp = requests.post(endpoint, json={"key": key, "station_id": station,
                                              "fetchfromid": last_id}, timeout=TIMEOUT)
         body = _json(resp, endpoint)
         if body.get("status") not in (None, "successful"):
@@ -71,7 +76,7 @@ def fetch_v1(url: str, key: str, station_id: int | str, *, max_pages: int = 1000
         last_id = new_last
 
 
-def fetch_v2(url: str, token: str, station_id: int | str | None = None, *,
+def fetch_v2(url: str, token: str, station_id: int | str | list | None = None, *,
              per_page: int = 5000, max_pages: int = 1000) -> Iterator[str]:
     """Yield ADIF text chunks using the v2 API (bearer token). Experimental."""
     endpoint = f"{_base(url)}/index.php/api/v2/qso"
@@ -79,7 +84,10 @@ def fetch_v2(url: str, token: str, station_id: int | str | None = None, *,
     since_id = 0
     for _ in range(max_pages):
         params = {"format": "adif", "since_id": since_id, "per_page": per_page}
-        if station_id not in (None, ""):
+        if isinstance(station_id, (list, tuple)):
+            if station_id:
+                params["station_id"] = ",".join(str(s) for s in station_id)
+        elif station_id not in (None, ""):
             params["station_id"] = station_id
         resp = requests.get(endpoint, params=params, headers=headers, timeout=TIMEOUT)
         body = _json(resp, endpoint)

@@ -24,10 +24,10 @@ def _load_qsos(cfg: cfgmod.Config) -> list[dict[str, str]]:
         return list(parse_adif(Path(cfg.adif).read_text(encoding="utf-8", errors="replace")))
     if cfg.wavelog_url and cfg.wavelog_key:
         fetch = wavelog.fetch_v2 if cfg.wavelog_api == "v2" else wavelog.fetch_v1
-        if cfg.wavelog_api != "v2" and not cfg.station_id:
+        if cfg.wavelog_api != "v2" and not cfg.station_ids:
             raise SystemExit("error: wavelog.station_id is required for the v1 API")
         qsos: list[dict[str, str]] = []
-        for chunk in fetch(cfg.wavelog_url, cfg.wavelog_key, cfg.station_id):
+        for chunk in fetch(cfg.wavelog_url, cfg.wavelog_key, cfg.station_ids):
             qsos.extend(parse_adif(chunk))
         return qsos
     raise SystemExit("error: configure either source.adif or wavelog.url + wavelog.key "
@@ -39,6 +39,9 @@ def build_parser() -> argparse.ArgumentParser:
                                 description="Render a Flag Counter-style worked-DXCC grid and world map from Wavelog.")
     p.add_argument("-c", "--config", help="YAML config file")
     p.add_argument("--adif", help="use a local ADIF file instead of the Wavelog API")
+    p.add_argument("--url", help="Wavelog base URL (overrides wavelog.url)")
+    p.add_argument("--station-id", help="Station Location id(s), e.g. 1 or 1,3 or 1-12")
+    p.add_argument("--api", choices=("v1", "v2"), help="Wavelog API version (default v1)")
     p.add_argument("-o", "--output-dir", help="where to write the images (default ./out)")
     p.add_argument("--callsign", help="callsign shown in the titles")
     p.add_argument("--metric", choices=METRICS, help="count QSOs or confirmed QSOs per entity")
@@ -52,6 +55,14 @@ def main(argv: list[str] | None = None) -> int:
     cfg = cfgmod.load(args.config)
     if args.adif:
         cfg.adif = args.adif
+    if args.url:
+        cfg.wavelog_url = args.url
+    if args.station_id:
+        cfg.station_ids = cfgmod.parse_station_ids(args.station_id)
+    if args.api:
+        cfg.wavelog_api = args.api
+    if not cfg.wavelog_key:
+        cfg.wavelog_key = os.environ.get("WAVELOG_API_KEY")
     if args.output_dir:
         cfg.output_dir = args.output_dir
     if args.callsign:
