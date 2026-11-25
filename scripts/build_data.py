@@ -29,7 +29,12 @@ import sys
 from pathlib import Path
 
 # Home nations that flag-icons has dedicated flags for (dxcc.json says "GB").
-ISO_OVERRIDE: dict[int, str] = {223: "GB-ENG", 279: "GB-SCT", 294: "GB-WLS", 265: "GB-NIR"}
+ISO_OVERRIDE: dict[int, str] = {223: "GB-ENG", 279: "GB-SCT", 294: "GB-WLS", 265: "GB-NIR",
+                                167: "AX",    # Market Reef: the Finnish half belongs to Aland
+                                246: "SMOM"}  # Sovereign Military Order of Malta, scripts/flags/smom.svg
+
+# Flags flag-icons does not ship, drawn for this project (scripts/flags/<iso>.svg).
+EXTRA_FLAGS = Path(__file__).resolve().parent / "flags"
 
 # (lat, lon) for entities Natural Earth does not give a usable point for.
 MANUAL_POINTS: dict[int, tuple[float, float]] = {
@@ -158,6 +163,8 @@ def main() -> int:
         isos = {e["iso"] for e in entities if e["iso"]}
         for iso in sorted(isos):
             svg = args.flags_dir / "flags" / "4x3" / f"{iso}.svg"
+            if not svg.exists():
+                svg = EXTRA_FLAGS / f"{iso}.svg"
             if not svg.exists():
                 missing_flag.add(iso)
                 continue

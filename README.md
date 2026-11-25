@@ -130,7 +130,8 @@ See [`examples/config.example.yaml`](examples/config.example.yaml). Common optio
 - Map flag positions are the AD1C cty.dat reference points for each entity (one point per entity,
   so large countries show a single flag). Flags in crowded regions (Europe, Caribbean) are spread
   apart with a leader line to the true position.
-- Some entities have no national flag (a grey placeholder is drawn).
+- UN HQ (4U1U) and ITU HQ (4U1I) show the UN flag, SMOM (1A) its red-and-white state flag and Market Reef (OJ0)
+  the flag of Aland. Spratly Islands has no flag (a grey placeholder is drawn).
 - The v1 client (`api: v1`, `POST /index.php/api/get_contacts_adif`) matches the request and
   response format of Wavelog's `Api` controller. The **v2** client (`api: v2`, a `wl2_` token with
   the `qso:read` scope, Wavelog 3.1.0+) returns the same QSOs. Both were checked against a live

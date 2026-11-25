@@ -33,7 +33,9 @@ Owner: Neal (KR4HBQ). Intended audience: any Wavelog user, so nothing may be har
    used when a QSO has no DXCC field (order: DXCC field, callsign, country name; DXCC 0 = no entity).
    Matches Wavelog on 99.87% of a real 5k-QSO log; misses are moved KL7/KH6/KP4 hams (Big CTY has more
    exact calls if that ever matters). Cloudlog has no ADIF export API (checked 2026-11-25). cty.dat is MIT (country-files.com/copyright), notice in LICENSES/cty-dat-MIT.txt.
-4. Some entities have no flag (`zz`): grey placeholder. Consider special icons (UN, SMOM, ITU).
+4. Special flags: UN HQ and ITU HQ use flag-icons `un` (the ITU emblem is a protected IGO emblem, not bundled),
+   SMOM uses `scripts/flags/smom.svg` (own drawing; build_data.py falls back to scripts/flags/), Market Reef uses `ax`.
+   Only Spratly Islands is still `zz` (grey placeholder; disputed, no neutral flag).
 5. Hosting: `.github/workflows/publish.yml` (nightly, GitHub Pages, config only via repo vars/secret, skipped when
    `vars.WAVELOG_URL` is unset; keepalive re-enables itself against the 60-day schedule shutoff; the API call succeeds, whether it
    actually resets the 60-day timer is unconfirmed). LIVE since 2026-11-25 for the owner's setup (repo vars, not files).

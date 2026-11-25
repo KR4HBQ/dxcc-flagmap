@@ -32,6 +32,12 @@ def test_entities_loaded_and_flags_present():
     us = ents[291]
     assert us.iso == "us" and data.flag_path("us") is not None
     assert data.flag_path("gb-sct") is not None
+    # special entities: UN and ITU fly the UN flag, SMOM and Market Reef have their own
+    assert {ents[d].iso for d in (289, 117)} == {"un"}
+    assert ents[246].iso == "smom" and data.flag_path("smom") is not None
+    assert ents[167].iso == "ax" and data.flag_path("ax") is not None
+    # every entity with a flag code ships its image (zz = deliberately flagless)
+    assert not [e.dxcc for e in ents.values() if e.iso not in ("", "zz") and data.flag_path(e.iso) is None]
 
 
 def test_count_entities_dxcc_number_then_callsign_fallback():

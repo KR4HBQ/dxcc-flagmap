@@ -3,6 +3,7 @@
 | Data | Source | License |
 |---|---|---|
 | Flag images (`data/flags/*.png`, rendered from SVG) | [flag-icons](https://github.com/lipis/flag-icons) | MIT |
+| SMOM flag (`data/flags/smom.png`, from `scripts/flags/smom.svg`) | drawn for this project | MIT |
 | DXCC entity list, ISO country codes (`data/dxcc_entities.json`) | [k0swe/dxcc-json](https://github.com/k0swe/dxcc-json) | Apache-2.0 (derived from the ARRL DXCC Current/Deleted list, edition 2026-01) |
 | Map base (`data/land.json`); fallback coordinates for Canada and Antarctica | [Natural Earth](https://www.naturalearthdata.com/) | Public domain |
 | Entity latitude/longitude and primary prefixes (`data/dxcc_entities.json`); prefix and callsign table (`data/prefixes.json`) | Jim Reisert AD1C, [cty.dat country file](https://www.country-files.com/) | MIT ([terms](https://www.country-files.com/copyright/)); derived values only, cty.dat itself is not bundled |

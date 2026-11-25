@@ -1145,7 +1145,7 @@
 {
 "dxcc":167,
 "name":"M\u00e4rket Island",
-"iso":"zz",
+"iso":"ax",
 "lat":60.0,
 "lon":19.0,
 "continent":"EU",
@@ -1685,7 +1685,7 @@
 {
 "dxcc":246,
 "name":"Sovereign Military Order of Malta",
-"iso":"zz",
+"iso":"smom",
 "lat":41.9,
 "lon":12.43,
 "continent":"EU",

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480">
+  <!-- State flag of the Sovereign Military Order of Malta: red field, white cross. Drawn for this project (MIT). -->
+  <rect width="640" height="480" fill="#ce1126"/>
+  <rect x="272" width="96" height="480" fill="#fff"/>
+  <rect y="192" width="640" height="96" fill="#fff"/>
+</svg>
