@@ -11,9 +11,11 @@ Owner: Neal (KR4HBQ). Intended audience: any Wavelog user, so nothing may be har
   Wavelog's 95 (one confirmation Wavelog had not synced yet); the report takes ~3 min for 5k QSOs. Auto order: adif, wavelog, lotw. Every request sends net.USER_AGENT.
   Credentials that sit in a URL (LoTW password, Wavelog station_info key) must never reach error messages.
 - Club Log (clublog.py: REST `POST /api/v1/logs/{call}/adif-export`, Bearer `cl_` token from Settings > API, 500
-  requests/day) and QRZ Logbook (qrz.py: `ACTION=FETCH`, `OPTION=MAX:250,AFTERLOGID:n`, subscription needed,
-  APP_QRZLOG_STATUS=C -> confirmed_by qrz) are written from the docs, NOT yet verified live: check the
-  response encoding (QRZ ADIF URL- or HTML-encoded?) and which DXCC / confirmation fields each export carries.
+  requests/day) VERIFIED live 2026-11-25: 125 worked / 96 confirmed, every entity identical to Wavelog. Export has
+  DXCC and only QSL_RCVD (LoTW + cards merged; no LOTW_QSL_RCVD), so confirmed_by lotw alone gives 0 there.
+- QRZ Logbook (qrz.py: `ACTION=FETCH`, `OPTION=MAX:250,AFTERLOGID:n`, subscription needed,
+  APP_QRZLOG_STATUS=C -> confirmed_by qrz) is written from the docs, NOT yet verified live: check the
+  response encoding (ADIF URL- or HTML-encoded?) and which DXCC / confirmation fields it carries.
 - Not supported: Cloudlog (no export API).
 - QRZ bios allow basic HTML + external images, not JS/iframes -> output is static PNG with stable filenames,
   regenerated on a schedule and hosted somewhere public.

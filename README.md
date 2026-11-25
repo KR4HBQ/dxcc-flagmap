@@ -61,7 +61,9 @@ export QRZ_LOGBOOK_KEY=XXXX-XXXX-XXXX-XXXX
 wavelog-flagmap --source qrz --callsign N0CALL -o ./out
 ```
 
-With QRZ, `--confirmed-by qrz` counts QSOs confirmed in the QRZ Logbook.
+Club Log's export marks LoTW and card confirmations alike as `QSL_RCVD`, so the default
+`confirmed_by` (`lotw,qsl`) is right for it but LoTW alone can't be singled out. With QRZ,
+`--confirmed-by qrz` counts QSOs confirmed in the QRZ Logbook.
 
 From your Wavelog instance:
 
