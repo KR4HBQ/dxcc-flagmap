@@ -54,8 +54,17 @@ jobs:
       - uses: actions/upload-pages-artifact@v4
         with:
           path: site
-      - id: deploy
+      - id: deploy_try
+        # Pages sometimes answers "Deployment failed, try again later"; retry once after a pause
+        continue-on-error: true
         uses: actions/deploy-pages@v4
+      - if: steps.deploy_try.outcome == 'failure'
+        run: sleep 90
+      - id: deploy_retry
+        if: steps.deploy_try.outcome == 'failure'
+        uses: actions/deploy-pages@v4
+      - id: deploy
+        run: echo "page_url=${{ steps.deploy_try.outputs.page_url || steps.deploy_retry.outputs.page_url }}" >> "$GITHUB_OUTPUT"
       - name: Keep the schedule alive
         # GitHub disables scheduled workflows after 60 days without repository activity;
         # re-enabling the workflow from inside a run resets that.
