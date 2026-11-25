@@ -12,8 +12,7 @@ Two API generations are supported:
   token (Wavelog >= 3.1.0, scope ``qso:read``). Response envelope
   ``{"data": {"exported", "lastfetchedid", "adif"}, "meta": {..., "has_more"}}``;
   rows are ascending by id, so we page by feeding ``lastfetchedid`` back as
-  ``since_id``. Implemented from docs.wavelog.org/developer/api-v2/qso/ and not
-  yet verified against a live instance - treat as experimental.
+  ``since_id``. Verified against a live instance (results identical to v1).
 """
 from __future__ import annotations
 
@@ -97,7 +96,7 @@ def fetch_v1(url: str, key: str, station_id: int | str | list, *, max_pages: int
 
 def fetch_v2(url: str, token: str, station_id: int | str | list | None = None, *,
              per_page: int = 5000, max_pages: int = 1000) -> Iterator[str]:
-    """Yield ADIF text chunks using the v2 API (bearer token). Experimental."""
+    """Yield ADIF text chunks using the v2 API (bearer token, scope ``qso:read``)."""
     endpoint = f"{_base(url)}/index.php/api/v2/qso"
     headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
     since_id = 0

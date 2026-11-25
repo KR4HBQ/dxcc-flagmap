@@ -122,8 +122,8 @@ See [`examples/config.example.yaml`](examples/config.example.yaml). Common optio
 - Some entities have no national flag (a grey placeholder is drawn).
 - The v1 client (`api: v1`, `POST /index.php/api/get_contacts_adif`) matches the request and
   response format of Wavelog's `Api` controller. The **v2** client (`api: v2`, a `wl2_` token with
-  the `qso:read` scope, Wavelog 3.1.0+) is written from the v2 API docs and is **experimental** until
-  checked against a live instance. Please file an issue if your instance behaves differently.
+  the `qso:read` scope, Wavelog 3.1.0+) returns the same QSOs. Both were checked against a live
+  instance. Please file an issue if yours behaves differently.
 
 ## Development
 
