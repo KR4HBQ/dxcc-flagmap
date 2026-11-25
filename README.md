@@ -87,9 +87,9 @@ See [`examples/config.example.yaml`](examples/config.example.yaml). Common optio
 
 ## Limitations
 
-- Map flag positions are approximate label points derived from Natural Earth geometry, not the
-  official cty.dat reference points. Flags in crowded regions (Europe, Caribbean) are spread apart
-  with a leader line to the true position.
+- Map flag positions are the AD1C cty.dat reference points for each entity (one point per entity,
+  so large countries show a single flag). Flags in crowded regions (Europe, Caribbean) are spread
+  apart with a leader line to the true position.
 - Some entities have no national flag (a grey placeholder is drawn).
 - The v1 client (`api: v1`, `POST /index.php/api/get_contacts_adif`) matches the request and
   response format of Wavelog's `Api` controller. The **v2** client (`api: v2`, a `wl2_` token with

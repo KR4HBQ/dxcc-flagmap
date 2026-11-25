@@ -9,7 +9,7 @@ Owner: Neal (KR4HBQ). Intended audience: any Wavelog user, so nothing may be har
 - Wavelog API is the default source (portable, no DB access). ADIF file is the alternative.
 - QRZ bios allow basic HTML + external images, not JS/iframes -> output is static PNG with stable filenames,
   regenerated on a schedule and hosted somewhere public.
-- Offline rendering: flags (flag-icons, MIT), land polygons (Natural Earth) and DXCC list (k0swe/dxcc-json) are bundled.
+- Offline rendering: flags (flag-icons, MIT), land polygons (Natural Earth), DXCC list (k0swe/dxcc-json) and entity coordinates (from AD1C cty.dat) are bundled.
 - Secrets only via env vars (`${VAR}` expansion in config); never commit keys or callsign-specific config.
 
 ## Layout
@@ -23,8 +23,9 @@ Owner: Neal (KR4HBQ). Intended audience: any Wavelog user, so nothing may be har
    errors `{status: failed, reason}` with 4xx; 20000 QSOs/call default). v2 rewritten from the docs
    (`data.{exported,lastfetchedid,adif}`, `meta.has_more`, page via `since_id`), still EXPERIMENTAL: not run live yet.
 2. Test with a real log (Neal's Wavelog, ~hundreds of entities) and tune the look (spacing, crowded Europe).
-3. Entity coordinates are approximate (Natural Earth label points + a small manual table). Better: derive from
-   AD1C cty.dat (not reachable from the cloud sandbox this was scaffolded in).
+3. Entity coordinates now come from AD1C cty.dat (`scripts/apply_cty.py <cty.dat>` after build_data.py; matches by
+   name, ALIASES prefix table, then prefix; KEEP = Canada/Antarctica stay on Natural Earth points). cty.dat is not bundled.
+   Re-run when cty.dat adds entities.
 4. Some entities have no flag (`zz`): grey placeholder. Consider special icons (UN, SMOM, ITU).
 5. Optional: publish to PyPI, add GitHub Actions workflow for scheduled runs, WordPress/SFTP upload plugin,
    per-band or per-mode filters, "worked vs confirmed" overlay.

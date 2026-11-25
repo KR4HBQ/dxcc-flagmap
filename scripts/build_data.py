@@ -16,7 +16,8 @@ Outputs:
   data/flags/<iso>.png      40x30 flag PNGs (needs `pip install cairosvg`)
 
 Entity coordinates are approximate label points derived from Natural Earth
-geometry (not the official cty.dat reference points). Entities that Natural
+geometry. Run scripts/apply_cty.py afterwards to replace them with AD1C
+cty.dat reference points (what the shipped data uses). Entities that Natural
 Earth does not model separately fall back to their parent country's point or
 to the manual table in MANUAL_POINTS. PRs improving them are welcome.
 """

@@ -4,6 +4,7 @@
 |---|---|---|
 | Flag images (`data/flags/*.png`, rendered from SVG) | [flag-icons](https://github.com/lipis/flag-icons) | MIT |
 | DXCC entity list, ISO country codes (`data/dxcc_entities.json`) | [k0swe/dxcc-json](https://github.com/k0swe/dxcc-json) | Apache-2.0 (derived from the ARRL DXCC Current/Deleted list, edition 2026-01) |
-| Map base and entity label points (`data/land.json`, coordinates) | [Natural Earth](https://www.naturalearthdata.com/) | Public domain |
+| Map base (`data/land.json`); fallback coordinates for Canada and Antarctica | [Natural Earth](https://www.naturalearthdata.com/) | Public domain |
+| Entity latitude/longitude (`data/dxcc_entities.json`) | AD1C [cty.dat country file](https://www.country-files.com/) (Big CTY) | Coordinates only; cty.dat itself is not bundled |
 
-`scripts/build_data.py` regenerates these files. Full license texts for the bundled data are in [`LICENSES/`](LICENSES/) (Apache-2.0 requires shipping a copy; MIT requires keeping the notice). `data/dxcc_entities.json` is a modified subset of the upstream dxcc.json with added map coordinates.
+`scripts/build_data.py` regenerates these files. Full license texts for the bundled data are in [`LICENSES/`](LICENSES/) (Apache-2.0 requires shipping a copy; MIT requires keeping the notice). `data/dxcc_entities.json` is a modified subset of the upstream dxcc.json with added map coordinates (from cty.dat via `scripts/apply_cty.py`).
