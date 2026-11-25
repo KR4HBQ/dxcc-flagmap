@@ -1,0 +1,27 @@
+# wavelog-flagmap configuration. Copy to config.yaml and edit.
+# ${VAR} values are read from environment variables, so keep secrets out of this file.
+
+callsign: N0CALL            # shown in the grid title
+metric: qsos                # qsos = QSOs per entity | confirmed = confirmed QSOs (LoTW / QSL / eQSL)
+theme: light                # light | dark
+output_dir: ./out           # dxcc-grid.png, dxcc-map.png, dxcc-stats.json are written here
+
+# --- data source: pick ONE ---------------------------------------------------
+wavelog:
+  url: https://log.example.com        # your Wavelog base URL
+  api: v1                             # v1 = read-only API key | v2 = wl2_ bearer token
+  key: ${WAVELOG_API_KEY}             # export WAVELOG_API_KEY=... before running
+  station_id: 1                       # Station Location ID (Wavelog > Station Locations)
+
+# source:
+#   adif: ./my-log.adi                # or render from an exported ADIF file instead
+
+# --- optional tuning ---------------------------------------------------------
+grid:
+  rows: 8                   # entries per column
+  max_entries: 48
+  # title: "My DX"
+map:
+  width: 1600
+  # flag_w: 30
+  # flag_h: 22
