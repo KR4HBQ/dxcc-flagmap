@@ -52,6 +52,25 @@ def _json(resp: requests.Response, endpoint: str) -> dict:
     return body
 
 
+def station_ids_v1(url: str, key: str) -> list[str]:
+    """All station location ids visible to the key (``GET /index.php/api/station_info/{key}``).
+
+    Wavelog returns every location of the key's user, or only those linked to the active
+    logbook when the user enabled "active logbook only" in their station settings.
+    """
+    endpoint = f"{_base(url)}/index.php/api/station_info/"
+    resp = requests.get(endpoint + requests.utils.quote(key, safe=""), timeout=TIMEOUT)
+    try:
+        body = resp.json()
+    except ValueError:
+        body = None
+    if resp.status_code != 200 or not isinstance(body, list):
+        reason = body.get("reason", "") if isinstance(body, dict) else ""
+        raise WavelogError(f"Wavelog answered HTTP {resp.status_code} from {endpoint}"
+                           + (f" ({reason})" if reason else ""))
+    return [str(s["station_id"]) for s in body if s.get("station_id") is not None]
+
+
 def fetch_v1(url: str, key: str, station_id: int | str | list, *, max_pages: int = 1000) -> Iterator[str]:
     """Yield ADIF text chunks until the instance reports nothing new."""
     endpoint = f"{_base(url)}/index.php/api/get_contacts_adif"

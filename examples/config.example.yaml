@@ -11,9 +11,9 @@ wavelog:
   url: https://log.example.com        # your Wavelog base URL
   api: v1                             # v1 = read-only API key | v2 = wl2_ bearer token
   key: ${WAVELOG_API_KEY}             # export WAVELOG_API_KEY=... before running
-  station_id: 1                       # Station Location ID(s) (Wavelog > Station Locations):
-                                      #   1  |  1,3,5  |  1-12  (include every location you operate
-                                      #   from, e.g. portable/POTA, to match Wavelog's DXCC totals)
+  station_id: all                     # Station Location ID(s) (Wavelog > Station Locations):
+                                      #   all (default: every location, new ones included automatically)
+                                      #   | 1 | 1,3,5 | 1-12
 
 # source:
 #   adif: ./my-log.adi                # or render from an exported ADIF file instead

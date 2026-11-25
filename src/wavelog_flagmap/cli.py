@@ -24,10 +24,13 @@ def _load_qsos(cfg: cfgmod.Config) -> list[dict[str, str]]:
         return list(parse_adif(Path(cfg.adif).read_text(encoding="utf-8", errors="replace")))
     if cfg.wavelog_url and cfg.wavelog_key:
         fetch = wavelog.fetch_v2 if cfg.wavelog_api == "v2" else wavelog.fetch_v1
-        if cfg.wavelog_api != "v2" and not cfg.station_ids:
-            raise SystemExit("error: wavelog.station_id is required for the v1 API")
+        stations = cfg.station_ids
+        if cfg.wavelog_api != "v2" and not stations:
+            stations = wavelog.station_ids_v1(cfg.wavelog_url, cfg.wavelog_key)
+            if not stations:
+                raise SystemExit("error: the API key's user has no station locations")
         qsos: list[dict[str, str]] = []
-        for chunk in fetch(cfg.wavelog_url, cfg.wavelog_key, cfg.station_ids):
+        for chunk in fetch(cfg.wavelog_url, cfg.wavelog_key, stations):
             qsos.extend(parse_adif(chunk))
         return qsos
     raise SystemExit("error: configure either source.adif or wavelog.url + wavelog.key "
@@ -40,7 +43,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-c", "--config", help="YAML config file")
     p.add_argument("--adif", help="use a local ADIF file instead of the Wavelog API")
     p.add_argument("--url", help="Wavelog base URL (overrides wavelog.url)")
-    p.add_argument("--station-id", help="Station Location id(s), e.g. 1 or 1,3 or 1-12")
+    p.add_argument("--station-id", help="Station Location id(s), e.g. 1, 1,3, 1-12 or all (default: all)")
     p.add_argument("--api", choices=("v1", "v2"), help="Wavelog API version (default v1)")
     p.add_argument("-o", "--output-dir", help="where to write the images (default ./out)")
     p.add_argument("--callsign", help="callsign shown in the titles")

@@ -35,8 +35,11 @@ def _expand(v: Any) -> Any:
 
 
 def parse_station_ids(v: Any) -> list[str]:
-    """Accept 3, "3", "1,2,5", "1-12", "1-4, 7" or a YAML list of those."""
-    if v is None or v == "":
+    """Accept 3, "3", "1,2,5", "1-12", "1-4, 7" or a YAML list of those.
+
+    An empty list (``all``, or no value) means every station location of the API key's user.
+    """
+    if v is None or v == "" or str(v).strip().lower() == "all":
         return []
     items = v if isinstance(v, (list, tuple)) else str(v).split(",")
     out: list[str] = []

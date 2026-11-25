@@ -174,3 +174,22 @@ def test_fetch_v1_sends_station_list_as_array(monkeypatch):
     list(wavelog.fetch_v1("https://wl.example", "k", ["1", "2"]))
     list(wavelog.fetch_v1("https://wl.example", "k", ["5"]))
     assert sent == [[1, 2], "5"]
+
+
+def test_station_all_lists_locations_then_fetches_them(monkeypatch):
+    got = {}
+
+    def fake_get(url, timeout):
+        got["url"] = url
+        return _Resp([{"station_id": "1", "station_callsign": "N0CALL"}, {"station_id": "7"}])
+
+    def fake_post(url, json, timeout):
+        got["station"] = json["station_id"]
+        return _Resp({"status": "successful", "lastfetchedid": 0, "adif": None})
+
+    monkeypatch.setattr(wavelog.requests, "get", fake_get)
+    monkeypatch.setattr(wavelog.requests, "post", fake_post)
+    assert config.parse_station_ids("all") == []
+    cfg = config.Config(wavelog_url="https://wl.example", wavelog_key="k")
+    assert cli._load_qsos(cfg) == []
+    assert got == {"url": "https://wl.example/index.php/api/station_info/k", "station": [1, 7]}
