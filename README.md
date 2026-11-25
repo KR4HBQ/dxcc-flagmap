@@ -54,20 +54,39 @@ Without a config file:
 wavelog-flagmap --url https://log.example.com --callsign N0CALL -o ./out
 ```
 
+## Publish nightly with GitHub Pages (no server needed)
+
+The included [`publish` workflow](.github/workflows/publish.yml) renders your images every night on
+GitHub's runners and serves them from GitHub Pages. Your Wavelog must be reachable from the internet.
+
+1. Fork this repository (or copy `.github/workflows/publish.yml` and `scripts/site_index.py` into your own).
+2. *Settings > Secrets and variables > Actions*:
+   - **Secret** `WAVELOG_API_KEY`: a read-only v1 key (Wavelog: your callsign menu > *API Keys*).
+   - **Variables** `WAVELOG_URL` (e.g. `https://log.example.com`) and `CALLSIGN`. Optional:
+     `WAVELOG_STATION_ID` (default `all`) and `FLAGMAP_ARGS` (extra flags, e.g. `--theme dark`).
+3. *Settings > Pages > Build and deployment > Source*: **GitHub Actions**.
+4. *Actions > publish > Run workflow* once to publish right away.
+
+The images are then at `https://<user>.github.io/<repo>/dxcc-grid.png` and `.../dxcc-map.png`.
+
+**Custom domain (optional):** add a DNS `CNAME` record such as `flagmap.example.com -> <user>.github.io`,
+then enter the name under *Settings > Pages > Custom domain* and tick *Enforce HTTPS*. On Cloudflare,
+set the record to *DNS only* (grey cloud) so GitHub can issue the certificate and nightly updates are not
+held in Cloudflare's cache.
+
 ## Embed in QRZ
 
-QRZ bios accept basic HTML and externally hosted images. Host the PNGs somewhere public
-(your website, an S3/Cloudflare bucket, GitHub Pages) and add to your bio:
+QRZ bios accept basic HTML and externally hosted images. Add to your bio:
 
 ```html
-<img src="https://example.com/dxcc-grid.png" alt="Worked DXCC">
-<img src="https://example.com/dxcc-map.png"  alt="DXCC map" width="800">
+<a href="https://<user>.github.io/<repo>/"><img src="https://<user>.github.io/<repo>/dxcc-grid.png" alt="Worked DXCC" style="max-width:100%;height:auto"></a>
+<img src="https://<user>.github.io/<repo>/dxcc-map.png" alt="DXCC map" style="width:100%;height:auto">
 ```
 
-The filenames never change, so the bio never needs editing again. Re-run the tool on a schedule and
-the images update. QRZ and browsers may cache images for a while.
+The filenames never change, so the bio never needs editing again. QRZ and browsers may cache images
+for a while (GitHub Pages: about 10 minutes).
 
-## Run it on a schedule
+## Or run it on your own server
 
 ```cron
 # nightly at 03:15

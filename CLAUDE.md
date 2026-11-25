@@ -20,14 +20,18 @@ Owner: Neal (KR4HBQ). Intended audience: any Wavelog user, so nothing may be har
 ## Open items / next steps
 1. **Wavelog API clients.** v1 checked against Wavelog's `Api::get_contacts_adif` source (JSON body `key`,
    `station_id`, `fetchfromid`; response `status`, `lastfetchedid`, `exported_qsos`, `adif` (null when empty);
-   errors `{status: failed, reason}` with 4xx; 20000 QSOs/call default). v2 rewritten from the docs
+   errors `{status: failed, reason}` with 4xx; 20000 QSOs/call default; `lastfetchedid` comes back as a string).
+   VERIFIED live 2026-11-25. `station_id: all` (default) lists ids via `GET /api/station_info/{key}`. v2 rewritten from the docs
    (`data.{exported,lastfetchedid,adif}`, `meta.has_more`, page via `since_id`), still EXPERIMENTAL: not run live yet.
-2. Test with a real log (Neal's Wavelog, ~hundreds of entities) and tune the look (spacing, crowded Europe).
+2. Real-log tuning done (2026-11-25, ~5k QSOs / 124 entities): prefix labels under grid counts, box-based map
+   spreading, `confirmed_by` (default lotw,qsl = Wavelog DXCC page default). Still to check: QRZ embed size.
 3. Entity coordinates now come from AD1C cty.dat (`scripts/apply_cty.py <cty.dat>` after build_data.py; matches by
    name, ALIASES prefix table, then prefix; KEEP = Canada/Antarctica stay on Natural Earth points). cty.dat is not bundled.
-   Re-run when cty.dat adds entities.
+   Re-run when cty.dat adds entities. Also copies the primary prefix. Ask AD1C before 1.0 (no license stated).
 4. Some entities have no flag (`zz`): grey placeholder. Consider special icons (UN, SMOM, ITU).
-5. Optional: publish to PyPI, add GitHub Actions workflow for scheduled runs, WordPress/SFTP upload plugin,
+5. Hosting: `.github/workflows/publish.yml` (nightly, GitHub Pages, config only via repo vars/secret, skipped when
+   `vars.WAVELOG_URL` is unset; keepalive re-enables itself against the 60-day schedule shutoff - unverified).
+   Optional: publish to PyPI, WordPress/SFTP upload plugin,
    per-band or per-mode filters, "worked vs confirmed" overlay.
 6. Confirm the dxcc-json (Apache-2.0) attribution in THIRD_PARTY_NOTICES.md is sufficient before a 1.0 release.
 
