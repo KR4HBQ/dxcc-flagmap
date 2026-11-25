@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from wavelog_flagmap import cli, config, data, lotw, net, stats, wavelog
+from wavelog_flagmap import cli, clublog, config, data, lotw, net, qrz, stats, wavelog
 from wavelog_flagmap.adif import parse_adif
 from wavelog_flagmap.render import GridOptions, MapOptions, render_grid, render_map
 
@@ -329,3 +329,63 @@ def test_config_unset_env_var_is_empty(tmp_path, monkeypatch):
     p.write_text("lotw:\n  username: ${LOTW_USERNAME}\n  password: ${LOTW_PASSWORD}\n")
     cfg = config.load(p)
     assert not cfg.lotw_username and not cfg.lotw_password and cli._source(cfg) is None
+
+
+class _Http:
+    def __init__(self, body, status_code=200):
+        self.content = body.encode("utf-8") if isinstance(body, str) else body
+        self.status_code = status_code
+
+    def json(self):
+        return json.loads(self.content)
+
+
+def test_clublog_fetch_and_errors(monkeypatch):
+    seen = {}
+
+    def fake_post(url, json, headers, timeout):
+        seen.update(url=url, json=json, headers=headers)
+        return _Http("<eoh> <CALL:5>DL1AA<DXCC:3>230<eor>")
+
+    monkeypatch.setattr(clublog.requests, "post", fake_post)
+    assert "DL1AA" in clublog.fetch("n0call/p", "cl_tok")
+    assert seen["url"] == "https://clublog.org/api/v1/logs/N0CALL/P/adif-export" and seen["json"] == {}
+    assert seen["headers"]["Authorization"] == "Bearer cl_tok" and "User-Agent" in seen["headers"]
+    err = '{"error":{"code":"unauthorized","message":"Send Authorization: Bearer <token>.","details":null}}'
+    monkeypatch.setattr(clublog.requests, "post", lambda *a, **k: _Http(err, 401))
+    with pytest.raises(clublog.ClublogError, match="401.*CLUBLOG_TOKEN"):
+        clublog.fetch("N0CALL", "bad")
+
+
+def test_qrz_fetch_pages_by_logid_and_normalizes(monkeypatch):
+    from urllib.parse import quote
+    recs = [f"<call:5>DL1A{i}<dxcc:3>230<app_qrzlog_logid:3>{100 + i}<app_qrzlog_status:1>{'C' if i == 0 else 'N'}<eor>"
+            for i in range(5)]
+    calls = []
+
+    def fake_post(url, data, headers, timeout):
+        calls.append(data["OPTION"])
+        after = int(data["OPTION"].split("AFTERLOGID:")[1])
+        page = [r for i, r in enumerate(recs) if 100 + i >= after][:2]
+        if not page:
+            return _Http("RESULT=FAIL&REASON=no log entries found&COUNT=0")
+        return _Http(f"RESULT=OK&COUNT=5&ADIF={quote(''.join(page))}")
+
+    monkeypatch.setattr(qrz.requests, "post", fake_post)
+    out = [qrz.normalize(r) for chunk in qrz.fetch("KEY", page=2) for r in parse_adif(chunk)]
+    assert calls == ["MAX:2,AFTERLOGID:0", "MAX:2,AFTERLOGID:102", "MAX:2,AFTERLOGID:104"]
+    assert len(out) == 5 and out[0]["qrzcom_qso_download_status"] == "Y"
+    assert "qrzcom_qso_download_status" not in out[1]
+    counts, _ = stats.count_entities(out, ["qrz"])
+    assert counts[230].confirmed == 1
+
+
+def test_qrz_response_parsing_and_auth_error(monkeypatch):
+    raw = qrz._parse("RESULT=OK&COUNT=1&ADIF=&lt;call:4&gt;K1AB&lt;eor&gt;")   # HTML-escaped, not URL-encoded
+    assert raw["RESULT"] == "OK" and raw["ADIF"] == "<call:4>K1AB<eor>"
+    raw = qrz._parse("RESULT=OK&ADIF=<call:4>K1AB<comment:3>a&b<eor>&COUNT=1")  # raw '&' inside the ADIF
+    assert "a&b" in raw["ADIF"]
+    monkeypatch.setattr(qrz.requests, "post",
+                        lambda *a, **k: _Http("RESULT=AUTH&REASON=invalid api key"))
+    with pytest.raises(qrz.QrzError, match="subscription"):
+        list(qrz.fetch("KEY"))

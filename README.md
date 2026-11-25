@@ -12,7 +12,8 @@ where JavaScript and iframes won't work: the output is plain PNG files.
 
 ## Features
 
-- Reads your log from the **Wavelog API** (no database access needed), straight from **LoTW**, or from an
+- Reads your log from the **Wavelog API** (no database access needed), straight from **LoTW**, **Club Log**
+  or the **QRZ Logbook** (QRZ subscribers), or from an
   **ADIF file exported by any logger** (Log4OM, N1MM+, HRD, DXKeeper, Cloudlog, QRZ Logbook, Club Log...),
   either a local file or a public URL.
 - Counts QSOs **or confirmed QSOs** (LoTW / QSL / eQSL / QRZ / Club Log, your choice) per DXCC entity.
@@ -50,6 +51,18 @@ LoTW returns every QSO you uploaded, so "confirmed" means confirmed in LoTW (pap
 known to LoTW). If your account has several callsigns, `--lotw-owncall N0CALL` keeps one.
 LoTW is slow to answer (about 3 minutes for 5,000 QSOs); that is normal.
 
+From Club Log (make a token under Club Log *Settings > API*) or the QRZ Logbook (needs a QRZ
+subscription; the key is on your logbook's *Settings* page):
+
+```bash
+export CLUBLOG_TOKEN=cl_...
+wavelog-flagmap --source clublog --callsign N0CALL -o ./out    # the log of N0CALL
+export QRZ_LOGBOOK_KEY=XXXX-XXXX-XXXX-XXXX
+wavelog-flagmap --source qrz --callsign N0CALL -o ./out
+```
+
+With QRZ, `--confirmed-by qrz` counts QSOs confirmed in the QRZ Logbook.
+
 From your Wavelog instance:
 
 ```bash
@@ -82,6 +95,8 @@ GitHub's runners and serves them from GitHub Pages. It reads Wavelog, LoTW or an
      (a read-only v1 key; Wavelog: your callsign menu > *API Keys*), optional variable `WAVELOG_STATION_ID`
      (default `all`).
    - **LoTW**: variable `LOTW_USERNAME`, secret `LOTW_PASSWORD`.
+   - **Club Log**: secret `CLUBLOG_TOKEN` and variable `FLAGMAP_SOURCE` = `clublog` (the log of `CALLSIGN`).
+   - **QRZ Logbook**: secret `QRZ_LOGBOOK_KEY` and variable `FLAGMAP_SOURCE` = `qrz`.
    - **ADIF URL**: variable `ADIF_URL`, a public link to an ADIF export from any logger (re-export it when
      you want the images to catch up).
 
@@ -145,8 +160,8 @@ See [`examples/config.example.yaml`](examples/config.example.yaml). Common optio
 - QSOs are placed by their ADIF `DXCC` field when present (Wavelog and most loggers fill it in).
   Without it, the entity comes from the callsign. That matches the logger's own assignment for about
   99.9% of QSOs; the exceptions are mostly US hams who moved but kept a KL7, KH6 or KP4 call.
-- Cloudlog has no full-log export API, so Cloudlog users export an ADIF file instead. The QRZ Logbook
-  API needs a QRZ subscription to download a log, so it is not supported yet; Club Log may follow.
+- Cloudlog has no full-log export API, so Cloudlog users export an ADIF file instead. Downloading from the
+  QRZ Logbook API needs a QRZ subscription.
 
 - Map flag positions are the AD1C cty.dat reference points for each entity (one point per entity,
   so large countries show a single flag). Flags in crowded regions (Europe, Caribbean) are spread

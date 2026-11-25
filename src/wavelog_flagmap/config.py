@@ -12,12 +12,16 @@ import yaml
 
 @dataclass
 class Config:
-    # data source: "wavelog", "lotw" or "adif"; None = adif if set, else wavelog, else lotw
+    # data source: wavelog, lotw, clublog, qrz or adif; None = the first one configured, in the order
+    # adif, wavelog, lotw, clublog, qrz
     source: str | None = None
     adif: str | None = None          # ADIF file path or http(s) URL
     lotw_username: str | None = None
     lotw_password: str | None = None
     lotw_owncall: str | None = None  # only QSOs made as this callsign (default: all of the account's)
+    clublog_token: str | None = None
+    clublog_callsign: str | None = None  # default: callsign
+    qrz_key: str | None = None       # QRZ Logbook API access key (needs a QRZ subscription)
     wavelog_url: str | None = None
     wavelog_api: str = "v1"          # "v1" (api key) or "v2" (bearer token)
     wavelog_key: str | None = None
@@ -82,6 +86,9 @@ def load(path: str | Path | None) -> Config:
         lotw_username=lotw.get("username") or os.environ.get("LOTW_USERNAME"),
         lotw_password=lotw.get("password") or os.environ.get("LOTW_PASSWORD"),
         lotw_owncall=lotw.get("owncall"),
+        clublog_token=(raw.get("clublog") or {}).get("token") or os.environ.get("CLUBLOG_TOKEN"),
+        clublog_callsign=(raw.get("clublog") or {}).get("callsign") or os.environ.get("CLUBLOG_CALLSIGN"),
+        qrz_key=(raw.get("qrz") or {}).get("key") or os.environ.get("QRZ_LOGBOOK_KEY"),
         wavelog_url=wl.get("url"),
         wavelog_api=str(wl.get("api", "v1")),
         wavelog_key=wl.get("key") or os.environ.get("WAVELOG_API_KEY"),

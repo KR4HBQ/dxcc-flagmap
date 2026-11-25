@@ -7,7 +7,7 @@ import os
 import sys
 from pathlib import Path
 
-from . import __version__, config as cfgmod, lotw, net, wavelog
+from . import __version__, clublog, config as cfgmod, lotw, net, qrz, wavelog
 from .adif import parse_adif
 from .render import MAP_VIEWS, GridOptions, MapOptions, render_grid, render_map
 from .stats import CONFIRM_FIELDS, METRICS, count_entities, ranked, summary
@@ -19,7 +19,7 @@ def _atomic_save(img, path: Path) -> None:
     os.replace(tmp, path)  # a web server never sees a half-written file
 
 
-SOURCES = ("wavelog", "lotw", "adif")
+SOURCES = ("wavelog", "lotw", "clublog", "qrz", "adif")
 
 
 def _source(cfg: cfgmod.Config) -> str | None:
@@ -31,6 +31,10 @@ def _source(cfg: cfgmod.Config) -> str | None:
         return "wavelog"
     if cfg.lotw_username:
         return "lotw"
+    if cfg.clublog_token:
+        return "clublog"
+    if cfg.qrz_key:
+        return "qrz"
     return None
 
 
@@ -55,6 +59,23 @@ def _load_qsos(cfg: cfgmod.Config) -> list[dict[str, str]]:
         except lotw.LotwError as exc:
             raise SystemExit(f"error: {exc}")
         return [lotw.normalize(r) for r in parse_adif(text)]
+    if source == "clublog":
+        call = cfg.clublog_callsign or cfg.callsign
+        if not (cfg.clublog_token and call):
+            raise SystemExit("error: Club Log needs CLUBLOG_TOKEN (environment variable) and a callsign "
+                             "(--callsign or CLUBLOG_CALLSIGN)")
+        try:
+            text = clublog.fetch(call, cfg.clublog_token)
+        except clublog.ClublogError as exc:
+            raise SystemExit(f"error: {exc}")
+        return list(parse_adif(text))
+    if source == "qrz":
+        if not cfg.qrz_key:
+            raise SystemExit("error: the QRZ Logbook needs QRZ_LOGBOOK_KEY (environment variable)")
+        try:
+            return [qrz.normalize(r) for chunk in qrz.fetch(cfg.qrz_key) for r in parse_adif(chunk)]
+        except qrz.QrzError as exc:
+            raise SystemExit(f"error: {exc}")
     if source == "wavelog" and cfg.wavelog_url and cfg.wavelog_key:
         fetch = wavelog.fetch_v2 if cfg.wavelog_api == "v2" else wavelog.fetch_v1
         stations = cfg.station_ids
@@ -68,16 +89,20 @@ def _load_qsos(cfg: cfgmod.Config) -> list[dict[str, str]]:
         return qsos
     if source == "wavelog":
         raise SystemExit("error: Wavelog needs wavelog.url and the WAVELOG_API_KEY environment variable")
-    raise SystemExit("error: no data source: pass --adif FILE_OR_URL, --url WAVELOG_URL or --source lotw "
+    raise SystemExit("error: no data source: pass --adif FILE_OR_URL, --url WAVELOG_URL or --source "
+                     "lotw/clublog/qrz "
                      "(or set them in the config file)")
 
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="wavelog-flagmap",
-                                description="Render a Flag Counter-style worked-DXCC grid and world map from Wavelog, LoTW or ADIF.")
+                                description="Render a Flag Counter-style worked-DXCC grid and world map from Wavelog, LoTW, Club Log, "
+                                            "QRZ Logbook or ADIF.")
     p.add_argument("-c", "--config", help="YAML config file")
     p.add_argument("--source", choices=SOURCES,
-                   help="where the QSOs come from (default: --adif if given, else Wavelog, else LoTW)")
+                   help="where the QSOs come from (default: the first configured of adif, wavelog, lotw, clublog, qrz; "
+                        "credentials come from WAVELOG_API_KEY, LOTW_USERNAME/LOTW_PASSWORD, CLUBLOG_TOKEN, "
+                        "QRZ_LOGBOOK_KEY)")
     p.add_argument("--adif", metavar="FILE_OR_URL", help="read an ADIF file (local path or http(s) URL)")
     p.add_argument("--lotw-owncall", metavar="CALL",
                    help="LoTW: only QSOs made as this callsign (credentials: LOTW_USERNAME / LOTW_PASSWORD)")
