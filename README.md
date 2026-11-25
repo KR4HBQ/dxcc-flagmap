@@ -25,7 +25,7 @@ where JavaScript and iframes won't work: the output is plain PNG files.
 pip install git+https://github.com/KR4HBQ/wavelog-flagmap
 ```
 
-Python 3.9+. Or use the included `Dockerfile`.
+Python 3.10+. Or use the included `Dockerfile`.
 
 ## Quick start
 

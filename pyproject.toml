@@ -9,7 +9,7 @@ description = "Flag Counter-style worked-DXCC flag grid and world map images fro
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = ["Pillow>=10.1", "PyYAML>=6", "requests>=2.28"]
 keywords = ["amateur-radio", "ham-radio", "wavelog", "dxcc", "adif", "qrz"]
 classifiers = [

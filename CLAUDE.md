@@ -5,7 +5,7 @@ Flag Counter-style flag grid + world map as static PNGs for embedding in a QRZ.c
 Owner: Neal (KR4HBQ). Intended audience: any Wavelog user, so nothing may be hardcoded to Neal.
 
 ## Decisions already made
-- MIT license. Python >= 3.9, Pillow for rendering, no heavy deps.
+- MIT license. Python >= 3.10 (3.9 is EOL and gone from GitHub runners), Pillow for rendering, no heavy deps.
 - Wavelog API is the default source (portable, no DB access). ADIF file is the alternative.
 - QRZ bios allow basic HTML + external images, not JS/iframes -> output is static PNG with stable filenames,
   regenerated on a schedule and hosted somewhere public.
