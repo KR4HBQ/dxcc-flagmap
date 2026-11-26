@@ -20,7 +20,7 @@ import json
 import re
 from pathlib import Path
 
-DATA_DIR = Path(__file__).resolve().parents[1] / "src" / "wavelog_flagmap" / "data"
+DATA_DIR = Path(__file__).resolve().parents[1] / "src" / "dxcc_flagmap" / "data"
 DATA = DATA_DIR / "dxcc_entities.json"
 PREFIXES = DATA_DIR / "prefixes.json"
 

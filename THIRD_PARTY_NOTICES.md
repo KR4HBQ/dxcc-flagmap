@@ -1,4 +1,4 @@
-# Third-party data bundled with wavelog-flagmap
+# Third-party data bundled with dxcc-flagmap
 
 | Data | Source | License |
 |---|---|---|

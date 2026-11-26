@@ -24,7 +24,7 @@ img{{max-width:100%;height:auto;display:block;margin:1em 0}}</style>
 <img src="dxcc-grid.png" alt="{title} - flag grid">
 <img src="dxcc-map.png" alt="{title} - world map">
 <p><a href="dxcc-stats.json">dxcc-stats.json</a> &middot; made with
-<a href="https://github.com/KR4HBQ/wavelog-flagmap">wavelog-flagmap</a></p>
+<a href="https://github.com/KR4HBQ/dxcc-flagmap">dxcc-flagmap</a></p>
 """, encoding="utf-8")
     return 0
 

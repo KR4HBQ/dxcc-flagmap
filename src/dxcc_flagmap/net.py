@@ -7,7 +7,7 @@ import requests
 
 from . import __version__
 
-USER_AGENT = f"wavelog-flagmap/{__version__} (+https://github.com/KR4HBQ/wavelog-flagmap)"
+USER_AGENT = f"dxcc-flagmap/{__version__} (+https://github.com/KR4HBQ/dxcc-flagmap)"
 HEADERS = {"User-Agent": USER_AGENT}
 TIMEOUT = 60
 

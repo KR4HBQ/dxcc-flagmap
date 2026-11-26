@@ -1,6 +1,6 @@
 AD1C Amateur Radio Country Files (cty.dat) - https://www.country-files.com/
 Author: Jim Reisert AD1C. Terms as published at https://www.country-files.com/copyright/
-wavelog-flagmap uses entity latitude/longitude and primary prefixes derived from cty.dat.
+dxcc-flagmap uses entity latitude/longitude and primary prefixes derived from cty.dat.
 
 Copyright (c) 1994-
 

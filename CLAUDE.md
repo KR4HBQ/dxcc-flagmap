@@ -1,8 +1,9 @@
-# CLAUDE.md - wavelog-flagmap
+# CLAUDE.md - dxcc-flagmap
 
-Open-source (MIT) Python tool: reads QSOs from Wavelog (API) or an ADIF file and renders a
+Open-source (MIT) Python tool (renamed from wavelog-flagmap 2026-11-26; the old command name is kept as an alias):
+reads QSOs from Wavelog, LoTW, Club Log, QRZ, WRL or an ADIF file and renders a
 Flag Counter-style flag grid + world map as static PNGs for embedding in a QRZ.com bio.
-Owner: Neal (KR4HBQ). Intended audience: any Wavelog user, so nothing may be hardcoded to Neal.
+Owner: Neal (KR4HBQ). Intended audience: any ham (Wavelog or any other logger), so nothing may be hardcoded to Neal.
 
 ## Decisions already made
 - MIT license. Python >= 3.10 (3.9 is EOL and gone from GitHub runners), Pillow for rendering, no heavy deps.
@@ -35,9 +36,9 @@ Owner: Neal (KR4HBQ). Intended audience: any Wavelog user, so nothing may be har
 - Secrets only via env vars (`${VAR}` expansion in config); never commit keys or callsign-specific config.
 
 ## Layout
-- `src/wavelog_flagmap/` adif.py (parser), wavelog.py (API v1/v2 client), lotw.py (LoTW lotwreport.adi), net.py
+- `src/dxcc_flagmap/` adif.py (parser), wavelog.py (API v1/v2 client), lotw.py (LoTW lotwreport.adi), net.py
   (User-Agent, ADIF-from-URL), stats.py, render.py (grid + map), config.py, cli.py
-- `src/wavelog_flagmap/data/` generated data; rebuild with `scripts/build_data.py` (needs cairosvg, flag-icons npm package, Natural Earth GeoJSON)
+- `src/dxcc_flagmap/data/` generated data; rebuild with `scripts/build_data.py` (needs cairosvg, flag-icons npm package, Natural Earth GeoJSON)
 - `examples/` config + synthetic sample ADIF (`make_sample.py`); `docs/` README images
 
 ## Open items / next steps

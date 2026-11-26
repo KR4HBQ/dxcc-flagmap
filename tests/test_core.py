@@ -3,9 +3,9 @@ from pathlib import Path
 
 import pytest
 
-from wavelog_flagmap import cli, clublog, config, data, lotw, net, qrz, stats, wavelog, wrl
-from wavelog_flagmap.adif import parse_adif
-from wavelog_flagmap.render import GridOptions, MapOptions, render_grid, render_map
+from dxcc_flagmap import cli, clublog, config, data, lotw, net, qrz, stats, wavelog, wrl
+from dxcc_flagmap.adif import parse_adif
+from dxcc_flagmap.render import GridOptions, MapOptions, render_grid, render_map
 
 SAMPLE = Path(__file__).resolve().parents[1] / "examples" / "sample.adi"
 
@@ -278,7 +278,7 @@ def test_lotw_fetch_all_uploads_and_normalize(monkeypatch):
     recs = [lotw.normalize(r) for r in parse_adif(lotw.fetch("n0call", "pw", owncall="N0CALL"))]
     assert seen["params"]["qso_qsl"] == "no" and seen["params"]["qso_query"] == "1"
     assert seen["params"]["qso_owncall"] == "N0CALL"
-    assert seen["headers"]["User-Agent"].startswith("wavelog-flagmap/")
+    assert seen["headers"]["User-Agent"].startswith("dxcc-flagmap/")
     assert recs[0]["lotw_qsl_rcvd"] == "Y" and "qsl_rcvd" not in recs[0]  # LoTW, not a paper card
     counts, skipped = stats.count_entities(recs)                    # JA1A: no DXCC field -> callsign
     assert skipped == 0 and counts[230].confirmed == 1 and counts[339].confirmed == 0

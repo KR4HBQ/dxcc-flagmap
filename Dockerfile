@@ -8,5 +8,5 @@ RUN pip install --no-cache-dir --require-hashes -r requirements-publish.txt \
 # runs unprivileged (uid 1000): the mounted /out must be writable by it (or pass --user)
 USER flagmap
 # mount a config at /config/config.yaml and an output dir at /out
-ENTRYPOINT ["wavelog-flagmap"]
+ENTRYPOINT ["dxcc-flagmap"]
 CMD ["-c", "/config/config.yaml", "-o", "/out"]

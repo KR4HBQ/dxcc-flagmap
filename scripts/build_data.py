@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate the bundled data files in src/wavelog_flagmap/data/.
+"""Regenerate the bundled data files in src/dxcc_flagmap/data/.
 
 This is a maintainer script - end users never need to run it.
 
@@ -118,7 +118,7 @@ def main() -> int:
     ap.add_argument("--dxcc-json", required=True, type=Path)
     ap.add_argument("--ne-dir", required=True, type=Path)
     ap.add_argument("--flags-dir", required=True, type=Path)
-    ap.add_argument("--out", default=Path(__file__).resolve().parents[1] / "src/wavelog_flagmap/data", type=Path)
+    ap.add_argument("--out", default=Path(__file__).resolve().parents[1] / "src/dxcc_flagmap/data", type=Path)
     ap.add_argument("--report", action="store_true", help="list entities without coordinates / flags")
     args = ap.parse_args()
 

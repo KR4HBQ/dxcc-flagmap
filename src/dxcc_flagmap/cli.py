@@ -1,4 +1,4 @@
-"""Command line entry point: ``wavelog-flagmap``."""
+"""Command line entry point: ``dxcc-flagmap``."""
 from __future__ import annotations
 
 import argparse
@@ -112,7 +112,7 @@ def _load_wavelog(cfg: cfgmod.Config) -> list[dict[str, str]]:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="wavelog-flagmap",
+    p = argparse.ArgumentParser(prog="dxcc-flagmap",
                                 description="Render a Flag Counter-style worked-DXCC grid and world map from Wavelog, LoTW, Club Log, "
                                             "QRZ Logbook, World Radio League or ADIF.")
     p.add_argument("-c", "--config", help="YAML config file")

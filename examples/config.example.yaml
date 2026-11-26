@@ -1,4 +1,4 @@
-# wavelog-flagmap configuration. Copy to config.yaml and edit.
+# dxcc-flagmap configuration. Copy to config.yaml and edit.
 # ${VAR} values are read from environment variables, so keep secrets out of this file.
 
 callsign: N0CALL            # shown in the grid title

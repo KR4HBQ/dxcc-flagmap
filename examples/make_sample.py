@@ -9,7 +9,7 @@ from pathlib import Path
 
 random.seed(250)
 root = Path(__file__).resolve().parents[1]
-ents = json.loads((root / "src/wavelog_flagmap/data/dxcc_entities.json").read_text())
+ents = json.loads((root / "src/dxcc_flagmap/data/dxcc_entities.json").read_text())
 # a few heavy hitters so the grid looks like a real DX log
 heavy = {291: 40, 230: 40, 248: 40, 223: 40, 54: 40, 339: 40, 281: 40, 227: 40, 1: 40,
          263: 40, 269: 27, 150: 23, 108: 23, 209: 23, 120: 16}

@@ -18,7 +18,7 @@ THEMES = {
 
 
 # Small "get your own" line in the footer (turn off with credit=False / --no-credit).
-CREDIT = "Get your own: github.com/KR4HBQ/wavelog-flagmap"
+CREDIT = "Get your own: github.com/KR4HBQ/dxcc-flagmap"
 
 
 @dataclass

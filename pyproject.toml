@@ -3,15 +3,15 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "wavelog-flagmap"
+name = "dxcc-flagmap"
 version = "0.1.0"
-description = "Flag Counter-style worked-DXCC flag grid and world map images from Wavelog, for QRZ bios and websites."
+description = "Flag Counter-style worked-DXCC flag grid and world map images from Wavelog, LoTW, Club Log, QRZ Logbook, World Radio League or ADIF, for QRZ bios and websites."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.10"
 dependencies = ["Pillow>=10.1", "PyYAML>=6", "requests>=2.28"]
-keywords = ["amateur-radio", "ham-radio", "wavelog", "dxcc", "adif", "qrz"]
+keywords = ["amateur-radio", "ham-radio", "dxcc", "wavelog", "lotw", "clublog", "qrz", "adif"]
 classifiers = [
   "Programming Language :: Python :: 3",
   "Topic :: Communications :: Ham Radio",
@@ -22,13 +22,14 @@ classifiers = [
 dev = ["pytest", "cairosvg"]
 
 [project.urls]
-Homepage = "https://github.com/KR4HBQ/wavelog-flagmap"
+Homepage = "https://github.com/KR4HBQ/dxcc-flagmap"
 
 [project.scripts]
-wavelog-flagmap = "wavelog_flagmap.cli:main"
+dxcc-flagmap = "dxcc_flagmap.cli:main"
+wavelog-flagmap = "dxcc_flagmap.cli:main"  # old name, kept for existing scripts
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/wavelog_flagmap"]
+packages = ["src/dxcc_flagmap"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
