@@ -96,7 +96,7 @@ def test_fetch_v1_pages_until_no_new_ids(monkeypatch):
     pages = [{"adif": "<call:1>A<eor>", "lastfetchedid": 10}, {"adif": "<call:1>B<eor>", "lastfetchedid": 20},
              {"adif": "", "lastfetchedid": 20}]
 
-    def fake_post(url, json, timeout, headers=None):
+    def fake_post(url, json, timeout, headers=None, **_):
         calls.append((url, json["fetchfromid"]))
         return R(pages[len(calls) - 1])
 
@@ -121,14 +121,14 @@ def test_fetch_v1_null_adif_when_nothing_new(monkeypatch):
     # Shape returned by Wavelog's Api::get_contacts_adif when no rows match
     body = {"status": "successful", "message": "No new QSOs available.", "lastfetchedid": 0,
             "exported_qsos": 0, "adif": None}
-    monkeypatch.setattr(wavelog.requests, "post", lambda url, json, timeout, headers=None: _Resp(body))
+    monkeypatch.setattr(wavelog.requests, "post", lambda url, json, timeout, headers=None, **_: _Resp(body))
     assert list(wavelog.fetch_v1("https://wl.example", "k", 1)) == []
 
 
 def test_fetch_v1_error_reason_is_reported(monkeypatch):
     import pytest
     body = {"status": "failed", "reason": "Station ID not accessible for this API key"}
-    monkeypatch.setattr(wavelog.requests, "post", lambda url, json, timeout, headers=None: _Resp(body, 401))
+    monkeypatch.setattr(wavelog.requests, "post", lambda url, json, timeout, headers=None, **_: _Resp(body, 401))
     with pytest.raises(wavelog.WavelogError, match="401.*Station ID not accessible"):
         list(wavelog.fetch_v1("https://wl.example", "k", 99))
 
@@ -174,7 +174,7 @@ def test_fetch_v1_sends_station_list_as_array(monkeypatch):
     sent = []
     body = {"status": "successful", "lastfetchedid": 0, "exported_qsos": 0, "adif": None}
 
-    def fake_post(url, json, timeout, headers=None):
+    def fake_post(url, json, timeout, headers=None, **_):
         sent.append(json["station_id"])
         return _Resp(body)
 
@@ -187,11 +187,11 @@ def test_fetch_v1_sends_station_list_as_array(monkeypatch):
 def test_station_all_lists_locations_then_fetches_them(monkeypatch):
     got = {}
 
-    def fake_get(url, timeout, headers=None):
+    def fake_get(url, timeout, headers=None, **_):
         got["url"] = url
         return _Resp([{"station_id": "1", "station_callsign": "N0CALL"}, {"station_id": "7"}])
 
-    def fake_post(url, json, timeout, headers=None):
+    def fake_post(url, json, timeout, headers=None, **_):
         got["station"] = json["station_id"]
         return _Resp({"status": "successful", "lastfetchedid": 0, "adif": None})
 
@@ -438,3 +438,67 @@ def test_wrl_error_and_confirmed_metric(monkeypatch):
     monkeypatch.setenv("WRL_API_KEY", "k")
     with pytest.raises(SystemExit, match="no confirmation"):
         cli.main(["--source", "wrl", "--metric", "confirmed"])
+
+
+def test_wavelog_refuses_plain_http_except_localhost_or_when_allowed():
+    with pytest.raises(wavelog.WavelogError, match="unencrypted"):
+        wavelog.check_url("http://log.example.com")
+    wavelog.check_url("https://log.example.com")
+    wavelog.check_url("http://localhost:8086")
+    wavelog.check_url("http://192.168.1.5", allow_http=True)
+    with pytest.raises(wavelog.WavelogError, match="https://"):
+        wavelog.check_url("log.example.com")
+
+
+def test_cli_stops_before_sending_a_key_over_http(monkeypatch, tmp_path):
+    def boom(*a, **k):
+        raise AssertionError("no request may be sent")
+    monkeypatch.setattr(wavelog.requests, "get", boom)
+    monkeypatch.setattr(wavelog.requests, "post", boom)
+    monkeypatch.setenv("WAVELOG_API_KEY", "secret")
+    with pytest.raises(SystemExit, match="unencrypted"):
+        cli.main(["--url", "http://log.example.com", "-o", str(tmp_path)])
+
+
+class _Redirect:
+    status_code = 301
+    headers = {"Location": "https://user:pw@new.example.com/index.php/api/station_info/SECRETKEY?x=1"}
+
+    def json(self):
+        raise ValueError
+
+
+def test_wavelog_does_not_follow_redirects_and_hides_the_target_path(monkeypatch):
+    seen = {}
+
+    def fake_get(url, headers, timeout, allow_redirects=True):
+        seen["redirects"] = allow_redirects
+        return _Redirect()
+
+    def fake_post(url, json, headers, timeout, allow_redirects=True):
+        seen["post_redirects"] = allow_redirects
+        return _Redirect()
+    monkeypatch.setattr(wavelog.requests, "get", fake_get)
+    monkeypatch.setattr(wavelog.requests, "post", fake_post)
+    with pytest.raises(wavelog.WavelogError, match="redirected") as e:
+        wavelog.station_ids_v1("https://log.example.com", "SECRETKEY")
+    assert "https://new.example.com" in str(e.value)
+    assert "SECRETKEY" not in str(e.value) and "pw" not in str(e.value)
+    with pytest.raises(wavelog.WavelogError, match="redirected"):
+        list(wavelog.fetch_v1("https://log.example.com", "SECRETKEY", 1))
+    assert seen == {"redirects": False, "post_redirects": False}
+
+
+def test_adif_url_errors_hide_query_and_credentials(monkeypatch):
+    monkeypatch.setattr(net.requests, "get", lambda *a, **k: _Raw("nope", 403))
+    with pytest.raises(net.FetchError) as e:
+        net.fetch_text("https://me:pw@files.example.com/log.adi?token=SIGNED&dl=1")
+    msg = str(e.value)
+    assert "files.example.com/log.adi" in msg and "SIGNED" not in msg and "pw" not in msg
+
+
+def test_wrl_retry_after_accepts_seconds_and_http_dates():
+    assert wrl._retry_after("12") == 12
+    assert wrl._retry_after(None) == 60
+    assert wrl._retry_after("soon") == 60
+    assert wrl._retry_after("Wed, 21 Oct 2015 07:28:00 GMT") == 0  # in the past

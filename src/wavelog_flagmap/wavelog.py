@@ -17,6 +17,7 @@ Two API generations are supported:
 from __future__ import annotations
 
 from typing import Iterator
+from urllib.parse import urlsplit
 
 import requests
 
@@ -29,11 +30,34 @@ class WavelogError(RuntimeError):
     pass
 
 
+_LOOPBACK = {"localhost", "127.0.0.1", "::1"}
+
+
 def _base(url: str) -> str:
     return url.rstrip("/")
 
 
+def check_url(url: str, *, allow_http: bool = False) -> None:
+    """Refuse to send the API key unencrypted: plain http only for this machine or when allowed."""
+    parts = urlsplit(url.strip())
+    if parts.scheme not in ("http", "https") or not parts.hostname:
+        raise WavelogError(f"the Wavelog URL must start with https:// (got {parts.scheme or 'no scheme'})")
+    if parts.scheme == "http" and not allow_http and parts.hostname not in _LOOPBACK:
+        raise WavelogError("the Wavelog URL uses plain http://, which would send the API key unencrypted; "
+                           "use https:// (or pass --allow-http / wavelog.allow_http: true on a trusted network)")
+
+
+def _redirected(resp: requests.Response, endpoint: str) -> None:
+    """Redirects are not followed: a POST body (v1 key) or a URL path (station_info key) would go along."""
+    if 300 <= resp.status_code < 400:
+        loc = urlsplit(resp.headers.get("Location") or "")
+        where = f" to {loc.scheme}://{loc.netloc.rpartition('@')[2]}" if loc.netloc else ""
+        raise WavelogError(f"Wavelog redirected (HTTP {resp.status_code}){where} from {endpoint} - "
+                           "use the address it redirects to as the Wavelog URL")
+
+
 def _json(resp: requests.Response, endpoint: str) -> dict:
+    _redirected(resp, endpoint)
     try:
         body = resp.json()
     except ValueError:
@@ -61,9 +85,11 @@ def station_ids_v1(url: str, key: str) -> list[str]:
     """
     endpoint = f"{_base(url)}/index.php/api/station_info/"
     try:  # the key is part of this URL, so the exception text (which quotes it) is not shown
-        resp = requests.get(endpoint + requests.utils.quote(key, safe=""), headers=HEADERS, timeout=TIMEOUT)
+        resp = requests.get(endpoint + requests.utils.quote(key, safe=""), headers=HEADERS, timeout=TIMEOUT,
+                            allow_redirects=False)
     except requests.RequestException as exc:
         raise WavelogError(f"could not reach {endpoint}: {type(exc).__name__}") from None
+    _redirected(resp, endpoint)
     try:
         body = resp.json()
     except ValueError:
@@ -86,7 +112,8 @@ def fetch_v1(url: str, key: str, station_id: int | str | list, *, max_pages: int
     last_id = 0
     for _ in range(max_pages):
         resp = requests.post(endpoint, json={"key": key, "station_id": station,
-                                             "fetchfromid": last_id}, headers=HEADERS, timeout=TIMEOUT)
+                                             "fetchfromid": last_id}, headers=HEADERS, timeout=TIMEOUT,
+                             allow_redirects=False)
         body = _json(resp, endpoint)
         if body.get("status") not in (None, "successful"):
             raise WavelogError(f"Wavelog reported failure: {body.get('reason') or body}")

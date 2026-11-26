@@ -11,6 +11,8 @@ the callsign.
 from __future__ import annotations
 
 import time
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from typing import Iterator
 
 import requests
@@ -26,6 +28,19 @@ HAS_CONFIRMATIONS = False
 
 class WrlError(RuntimeError):
     pass
+
+
+def _retry_after(value: str | None) -> int:
+    """Seconds from a Retry-After header: a number or an HTTP date (default 60)."""
+    try:
+        return max(0, int(value))
+    except (TypeError, ValueError):
+        pass
+    try:
+        when = parsedate_to_datetime(value)
+        return max(0, int((when - datetime.now(timezone.utc)).total_seconds()))
+    except (TypeError, ValueError):
+        return 60
 
 
 def _band(metres) -> str:
@@ -69,7 +84,7 @@ def fetch(key: str, *, page: int = PAGE, max_pages: int = 2000) -> Iterator[dict
                 raise WrlError(f"could not reach World Radio League: {type(exc).__name__}") from None
             if resp.status_code != 429 or attempt == 2:
                 break
-            wait = int(resp.headers.get("Retry-After") or 60)
+            wait = _retry_after(resp.headers.get("Retry-After"))
             if wait > 300:  # the daily budget is spent; don't sit in a CI job for hours
                 break
             time.sleep(wait)

@@ -86,21 +86,29 @@ def _load_qsos(cfg: cfgmod.Config) -> list[dict[str, str]]:
         except wrl.WrlError as exc:
             raise SystemExit(f"error: {exc}")
     if source == "wavelog" and cfg.wavelog_url and cfg.wavelog_key:
-        fetch = wavelog.fetch_v2 if cfg.wavelog_api == "v2" else wavelog.fetch_v1
-        stations = cfg.station_ids
-        if cfg.wavelog_api != "v2" and not stations:
-            stations = wavelog.station_ids_v1(cfg.wavelog_url, cfg.wavelog_key)
-            if not stations:
-                raise SystemExit("error: the API key's user has no station locations")
-        qsos: list[dict[str, str]] = []
-        for chunk in fetch(cfg.wavelog_url, cfg.wavelog_key, stations):
-            qsos.extend(parse_adif(chunk))
-        return qsos
+        try:
+            return _load_wavelog(cfg)
+        except wavelog.WavelogError as exc:
+            raise SystemExit(f"error: {exc}")
     if source == "wavelog":
         raise SystemExit("error: Wavelog needs wavelog.url and the WAVELOG_API_KEY environment variable")
     raise SystemExit("error: no data source: pass --adif FILE_OR_URL, --url WAVELOG_URL or --source "
                      "lotw/clublog/qrz/wrl "
                      "(or set them in the config file)")
+
+
+def _load_wavelog(cfg: cfgmod.Config) -> list[dict[str, str]]:
+    wavelog.check_url(cfg.wavelog_url, allow_http=cfg.wavelog_allow_http)
+    fetch = wavelog.fetch_v2 if cfg.wavelog_api == "v2" else wavelog.fetch_v1
+    stations = cfg.station_ids
+    if cfg.wavelog_api != "v2" and not stations:
+        stations = wavelog.station_ids_v1(cfg.wavelog_url, cfg.wavelog_key)
+        if not stations:
+            raise SystemExit("error: the API key's user has no station locations")
+    qsos: list[dict[str, str]] = []
+    for chunk in fetch(cfg.wavelog_url, cfg.wavelog_key, stations):
+        qsos.extend(parse_adif(chunk))
+    return qsos
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -118,6 +126,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--url", help="Wavelog base URL (overrides wavelog.url)")
     p.add_argument("--station-id", help="Station Location id(s), e.g. 1, 1,3, 1-12 or all (default: all)")
     p.add_argument("--api", choices=("v1", "v2"), help="Wavelog API version (default v1)")
+    p.add_argument("--allow-http", action="store_true",
+                   help="allow a plain http:// Wavelog URL (sends the API key unencrypted; localhost is always allowed)")
     p.add_argument("-o", "--output-dir", help="where to write the images (default ./out)")
     p.add_argument("--callsign", help="callsign shown in the titles")
     p.add_argument("--metric", choices=METRICS, help="count QSOs or confirmed QSOs per entity")
@@ -149,6 +159,8 @@ def main(argv: list[str] | None = None) -> int:
         cfg.station_ids = cfgmod.parse_station_ids(args.station_id)
     if args.api:
         cfg.wavelog_api = args.api
+    if args.allow_http:
+        cfg.wavelog_allow_http = True
     if not cfg.wavelog_key:
         cfg.wavelog_key = os.environ.get("WAVELOG_API_KEY")
     if args.output_dir:

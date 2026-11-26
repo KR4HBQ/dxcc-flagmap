@@ -9,7 +9,12 @@ Owner: Neal (KR4HBQ). Intended audience: any Wavelog user, so nothing may be har
 - Sources: Wavelog API (default, no DB access), LoTW (`--source lotw`, LOTW_USERNAME/LOTW_PASSWORD env), ADIF file
   or URL (`--adif`, any logger). LoTW VERIFIED live 2026-11-25: 125 worked like Wavelog, 96 LoTW-confirmed vs
   Wavelog's 95 (one confirmation Wavelog had not synced yet); the report takes ~3 min for 5k QSOs. Auto order: adif, wavelog, lotw. Every request sends net.USER_AGENT.
-  Credentials that sit in a URL (LoTW password, Wavelog station_info key) must never reach error messages.
+  Credentials that sit in a URL (LoTW password, Wavelog station_info key) must never reach error messages;
+  ADIF URLs are shown without query/userinfo (`net.redact`). Wavelog refuses plain http:// (key in clear) unless
+  localhost or `--allow-http`, and never follows redirects (v1 key is in the POST body, station_info key in the path).
+  Security audit 2026-11-26: publish.yml has per-job permissions, actions pinned to SHAs (Dependabot updates),
+  hash-pinned requirements-publish.txt (regenerate with pip-compile --generate-hashes when deps change), tool run
+  from src/ with no build step; WAVELOG_URL/LOTW_USERNAME/ADIF_URL may be secrets (public logs show vars).
 - Club Log (clublog.py: REST `POST /api/v1/logs/{call}/adif-export`, Bearer `cl_` token from Settings > API, 500
   requests/day) VERIFIED live 2026-11-25: 125 worked / 96 confirmed, every entity identical to Wavelog. Export has
   DXCC and only QSL_RCVD (LoTW + cards merged; no LOTW_QSL_RCVD), so confirmed_by lotw alone gives 0 there.

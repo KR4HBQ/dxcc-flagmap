@@ -26,6 +26,7 @@ class Config:
     wavelog_url: str | None = None
     wavelog_api: str = "v1"          # "v1" (api key) or "v2" (bearer token)
     wavelog_key: str | None = None
+    wavelog_allow_http: bool = False  # plain http:// sends the key unencrypted; off except for localhost
     station_ids: list[str] = field(default_factory=list)  # one or more Station Location ids
 
     callsign: str = ""
@@ -94,6 +95,7 @@ def load(path: str | Path | None) -> Config:
         wavelog_url=wl.get("url"),
         wavelog_api=str(wl.get("api", "v1")),
         wavelog_key=wl.get("key") or os.environ.get("WAVELOG_API_KEY"),
+        wavelog_allow_http=str(wl.get("allow_http", "")).lower() in ("true", "yes", "1"),
         station_ids=parse_station_ids(wl.get("station_id")),
         callsign=raw.get("callsign", ""),
         metric=raw.get("metric", "qsos"),

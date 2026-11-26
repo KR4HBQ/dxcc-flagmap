@@ -13,6 +13,8 @@ wavelog:
   url: https://log.example.com        # your Wavelog base URL
   api: v1                             # v1 = read-only API key | v2 = wl2_ bearer token
   key: ${WAVELOG_API_KEY}             # export WAVELOG_API_KEY=... before running
+  # allow_http: true                  # only for a plain http:// URL on a trusted network (the key would
+                                      #   travel unencrypted; http://localhost is always allowed)
   station_id: all                     # Station Location ID(s) (Wavelog > Station Locations):
                                       #   all (default: every location, new ones included automatically)
                                       #   | 1 | 1,3,5 | 1-12
