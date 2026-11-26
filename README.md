@@ -162,8 +162,10 @@ Docker:
 
 ```bash
 docker build -t wavelog-flagmap .
-docker run --rm -e WAVELOG_API_KEY -v $PWD/config.yaml:/config/config.yaml:ro -v $PWD/out:/out wavelog-flagmap
+docker run --rm --user "$(id -u)" -e WAVELOG_API_KEY -v $PWD/config.yaml:/config/config.yaml:ro -v $PWD/out:/out wavelog-flagmap
 ```
+
+The container runs as an unprivileged user; `--user "$(id -u)"` lets it write to your `out` directory.
 
 ## Configuration
 
