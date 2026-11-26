@@ -104,18 +104,22 @@ GitHub's runners and serves them from GitHub Pages. It reads Wavelog, LoTW or an
 1. Fork this repository (or copy `.github/workflows/publish.yml` and `scripts/site_index.py` into your own).
 2. *Settings > Secrets and variables > Actions*: the **variable** `CALLSIGN`, optionally `FLAGMAP_ARGS`
    (extra flags, e.g. `--map-view full --theme dark`; see `wavelog-flagmap --help`), and one source:
-   - **Wavelog**: variable `WAVELOG_URL` (e.g. `https://log.example.com`), secret `WAVELOG_API_KEY`
+   - **Wavelog**: `WAVELOG_URL` (e.g. `https://log.example.com`), secret `WAVELOG_API_KEY`
      (a read-only v1 key; Wavelog: your callsign menu > *API Keys*), optional variable `WAVELOG_STATION_ID`
      (default `all`).
-   - **LoTW**: variable `LOTW_USERNAME`, secret `LOTW_PASSWORD`.
+   - **LoTW**: `LOTW_USERNAME`, secret `LOTW_PASSWORD`.
    - **Club Log**: secret `CLUBLOG_TOKEN` and variable `FLAGMAP_SOURCE` = `clublog` (the log of `CALLSIGN`).
    - **QRZ Logbook**: secret `QRZ_LOGBOOK_KEY` and variable `FLAGMAP_SOURCE` = `qrz`.
    - **World Radio League**: secret `WRL_API_KEY` and variable `FLAGMAP_SOURCE` = `wrl`.
-   - **ADIF URL**: variable `ADIF_URL`, a public link to an ADIF export from any logger (re-export it when
+   - **ADIF URL**: `ADIF_URL`, a public link to an ADIF export from any logger (re-export it when
      you want the images to catch up).
 
-   With more than one configured, Wavelog wins over LoTW over the ADIF URL; the variable
-   `FLAGMAP_SOURCE` (`wavelog`, `lotw` or `adif`) picks one explicitly.
+   `WAVELOG_URL`, `LOTW_USERNAME` and `ADIF_URL` can be variables or secrets. **The Actions logs of a
+   public repository are public and show variable values**, so make them secrets if you'd rather not
+   publish your Wavelog address; a source set up only through secrets also needs the variable
+   `FLAGMAP_SOURCE` (`wavelog`, `lotw`, `clublog`, `qrz`, `wrl` or `adif`), because GitHub can't check
+   secrets before a job starts. With more than one configured, Wavelog wins over LoTW over the ADIF URL,
+   unless `FLAGMAP_SOURCE` picks one.
 3. *Settings > Pages > Build and deployment > Source*: **GitHub Actions**.
 4. In the repository's top **Actions** tab (not *Settings > Actions*): *publish > Run workflow* once to
    publish right away. The run can take a minute to appear in the list.
