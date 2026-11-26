@@ -59,9 +59,11 @@ Owner: Neal (KR4HBQ). Intended audience: any Wavelog user, so nothing may be har
 4. Special flags: UN HQ and ITU HQ use flag-icons `un` (the ITU emblem is a protected IGO emblem, not bundled),
    SMOM uses `scripts/flags/smom.svg` (own drawing; build_data.py falls back to scripts/flags/), Market Reef uses `ax`.
    Only Spratly Islands is still `zz` (grey placeholder; disputed, no neutral flag).
-5. Hosting: `.github/workflows/publish.yml` (nightly, GitHub Pages, config only via repo vars/secret, skipped when
-   `vars.WAVELOG_URL` is unset; keepalive re-enables itself against the 60-day schedule shutoff; the API call succeeds, whether it
-   actually resets the 60-day timer is unconfirmed). LIVE since 2026-11-25 for the owner's setup (repo vars, not files).
+5. Hosting: `.github/workflows/publish.yml` (nightly, GitHub Pages, config only via repo vars/secret, skipped unless
+   WAVELOG_URL, LOTW_USERNAME, ADIF_URL or FLAGMAP_SOURCE is a variable; keepalive (own job) re-enables itself against the 60-day schedule shutoff; the API call succeeds, whether it
+   actually resets the 60-day timer is unconfirmed). LIVE since 2026-11-25 for the owner's setup (repo secrets + vars, not files). Hardened workflow
+   VERIFIED 2026-11-26 (run #5): hash-pinned install, Wavelog URL as a secret, Pages deploy failed once and the
+   retry after 90 s succeeded.
    Optional: publish to PyPI, WordPress/SFTP upload plugin,
    per-band or per-mode filters, "worked vs confirmed" overlay.
 6. Confirm the dxcc-json (Apache-2.0) attribution in THIRD_PARTY_NOTICES.md is sufficient before a 1.0 release.
